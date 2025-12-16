@@ -1,5 +1,5 @@
 import { db } from '@/lib/firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { Anomaly } from '@/lib/agents/types';
 
 export interface SchedulingResult {
@@ -72,5 +72,31 @@ export async function scheduleAppointment(
       success: false,
       error: error instanceof Error ? error.message : 'Failed to schedule appointment',
     };
+  }
+}
+
+export async function getAppointments(email: string) {
+  try {
+    const q = query(collection(db, 'appointments'), where('userId', '==', email));
+    const snapshot = await getDocs(q);
+    const appointments = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        details: {
+          customerName: email,
+          vehicleInfo: data.vehicleInfo ? `${data.vehicleInfo.year} ${data.vehicleInfo.make} ${data.vehicleInfo.model}` : 'Unknown Vehicle',
+          issueDescription: data.anomalies?.[0]?.description || 'Maintenance Check',
+        },
+        schedule: {
+          date: data.appointmentDate,
+          status: data.status
+        }
+      };
+    });
+    return { success: true, appointments };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: 'Failed to fetch appointments' };
   }
 }

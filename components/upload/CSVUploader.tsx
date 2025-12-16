@@ -1,134 +1,148 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState, useRef } from 'react';
+import { UploadCloud, FileSpreadsheet, AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CSVUploaderProps {
     onUpload: (file: File) => void;
-    loading?: boolean;
+    loading: boolean;
 }
 
 export default function CSVUploader({ onUpload, loading }: CSVUploaderProps) {
     const [dragActive, setDragActive] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleDrag = useCallback((e: React.DragEvent) => {
+    const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (e.type === 'dragenter' || e.type === 'dragover') {
+        if (e.type === "dragenter" || e.type === "dragover") {
             setDragActive(true);
-        } else if (e.type === 'dragleave') {
+        } else if (e.type === "dragleave") {
             setDragActive(false);
         }
-    }, []);
+    };
 
-    const handleDrop = useCallback((e: React.DragEvent) => {
+    const validateFile = (file: File) => {
+        if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+            setError('Invalid file format. Please upload a standard CSV file.');
+            return false;
+        }
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            setError('File size exceeds 5MB limit.');
+            return false;
+        }
+        return true;
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
+        setError(null);
 
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            const file = e.dataTransfer.files[0];
-            if (file.name.endsWith('.csv')) {
-                setSelectedFile(file);
-                onUpload(file);
-            } else {
-                alert('Please upload a CSV file');
+            const uploadedFile = e.dataTransfer.files[0];
+            if (validateFile(uploadedFile)) {
+                setFile(uploadedFile);
+                onUpload(uploadedFile);
             }
         }
-    }, [onUpload]);
+    };
 
-    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
+        setError(null);
         if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            setSelectedFile(file);
-            onUpload(file);
+            const uploadedFile = e.target.files[0];
+            if (validateFile(uploadedFile)) {
+                setFile(uploadedFile);
+                onUpload(uploadedFile);
+            }
         }
-    }, [onUpload]);
+    };
+
+    const clearFile = () => {
+        setFile(null);
+        setError(null);
+        if (inputRef.current) inputRef.current.value = '';
+    };
 
     return (
         <div className="w-full">
-            <motion.div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                animate={{
-                    borderColor: dragActive ? 'var(--primary)' : 'var(--border)',
-                    backgroundColor: dragActive ? 'rgba(94, 106, 210, 0.05)' : 'rgba(255, 255, 255, 0.01)',
-                }}
-                className={`
-                    relative w-full h-32 rounded-xl border border-dashed transition-all duration-300
-                    flex flex-col items-center justify-center cursor-pointer group hover:border-border-highlight
-                `}
-            >
-                <input
-                    type="file"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={handleChange}
-                    accept=".csv"
-                    disabled={loading}
-                />
+            <input
+                ref={inputRef}
+                type="file"
+                className="hidden"
+                accept=".csv"
+                onChange={handleChange}
+                disabled={loading}
+            />
 
-                <AnimatePresence mode="wait">
-                    {loading ? (
-                        <motion.div
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center"
-                        >
-                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
-                            <p className="text-xs text-foreground-muted">Processing Data...</p>
-                        </motion.div>
-                    ) : selectedFile ? (
-                        <motion.div
-                            key="file"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex items-center space-x-3 bg-surface-highlight px-4 py-2 rounded-lg border border-border"
-                        >
-                            <span className="text-xl">📄</span>
-                            <div className="text-left">
-                                <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
-                                <p className="text-[10px] text-foreground-muted">{(selectedFile.size / 1024).toFixed(1)} KB</p>
-                            </div>
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setSelectedFile(null);
-                                }}
-                                className="p-1 hover:bg-white/10 rounded-full"
-                            >
-                                ✕
-                            </button>
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="idle"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center text-center"
-                        >
-                            <div className="w-10 h-10 mb-3 rounded-full bg-surface-highlight flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-300">
-                                <span className="text-lg opacity-60">📥</span>
-                            </div>
-                            <p className="text-sm font-medium text-foreground mb-1">Upload Vehicle Data</p>
-                            <p className="text-xs text-foreground-muted">Drag & drop CSV or click to browse</p>
-                        </motion.div>
+            {!file ? (
+                <div
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    onClick={() => inputRef.current?.click()}
+                    className={cn(
+                        "relative group cursor-pointer border-2 border-dashed rounded-lg p-8 transition-all duration-300 flex flex-col items-center justify-center text-center",
+                        dragActive
+                            ? "border-primary bg-primary/5"
+                            : "border-[#27272a] bg-[#0c0c0e] hover:border-zinc-500 hover:bg-[#18181b]",
+                        loading && "opacity-50 pointer-events-none"
                     )}
-                </AnimatePresence>
+                >
+                    <div className="w-10 h-10 rounded-full bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <UploadCloud className="w-5 h-5 text-zinc-400 group-hover:text-primary transition-colors" />
+                    </div>
+                    <h3 className="text-sm font-bold text-zinc-300">
+                        Drop CSV file
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1 max-w-[200px]">
+                        Click to browse or drag file here. Max size 5MB.
+                    </p>
 
-                {/* Corner Accents */}
-                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-primary/30 rounded-tl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-primary/30 rounded-tr opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-primary/30 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-primary/30 rounded-br opacity-0 group-hover:opacity-100 transition-opacity" />
-            </motion.div>
+                    {error && (
+                        <div className="absolute inset-x-0 bottom-2 text-center">
+                            <span className="text-[10px] text-red-500 font-medium bg-red-500/10 px-2 py-0.5 rounded">
+                                {error}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="bg-[#18181b] border border-[#27272a] rounded-lg p-4 flex items-center gap-4">
+                    <div className="w-10 h-10 rounded bg-[#27272a] flex items-center justify-center shrink-0">
+                        {loading ? <Loader2 className="w-5 h-5 text-primary animate-spin" /> : <FileSpreadsheet className="w-5 h-5 text-emerald-500" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                            <p className="text-sm font-bold text-zinc-200 truncate">{file.name}</p>
+                            <button onClick={clearFile} disabled={loading} className="text-zinc-500 hover:text-white">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className="h-1 flex-1 bg-[#27272a] rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full bg-primary"
+                                    initial={{ width: "0%" }}
+                                    animate={{ width: loading ? "60%" : "100%" }}
+                                    transition={{ duration: 0.5 }}
+                                />
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                                {(file.size / 1024).toFixed(0)}KB
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

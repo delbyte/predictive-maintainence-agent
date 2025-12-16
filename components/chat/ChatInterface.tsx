@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { AgentMessage, Anomaly, AnomalyDetectionResult } from '@/lib/agents/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Bot, User, RefreshCw, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ChatInterfaceProps {
     anomalies?: Anomaly[];
@@ -16,7 +18,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
         {
             id: '1',
             role: 'assistant',
-            content: `Hello. I've analyzed the data and found ${anomalies?.length || 0} issues. How can I help you?`,
+            content: `System ready. I have access to the analysis of ${anomalies?.length || 0} items.`,
             agentName: 'chatbot',
             timestamp: Date.now(),
         },
@@ -56,7 +58,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
                     conversationHistory: messages,
                     anomalies,
                     vehicleInfo,
-                    analysisResult // Pass full context
+                    analysisResult
                 }),
             });
 
@@ -65,7 +67,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
             const assistantMessage: AgentMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: data.response || data.message || "I'm not sure how to respond to that.",
+                content: data.response || data.message || "No response generated.",
                 agentName: 'chatbot',
                 timestamp: Date.now(),
             };
@@ -80,7 +82,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
             const errorMessage: AgentMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: 'Connection interrupted. Please try again.',
+                content: 'Error: Communication channel interrupted.',
                 agentName: 'chatbot',
                 timestamp: Date.now(),
             };
@@ -99,34 +101,39 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
     };
 
     return (
-        <div className="glass-panel w-full h-[500px] flex flex-col overflow-hidden rounded-xl border border-white/10 shadow-2xl backdrop-blur-xl bg-[#08090A]/90">
+        <div className="flex flex-col h-[600px] bg-[#09090b] border border-[#27272a] rounded-lg overflow-hidden">
             {/* Header */}
-            <div className="p-3 border-b border-white/5 bg-white/5 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                    <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Assistant</h3>
-                </div>
+            <div className="p-4 border-b border-[#27272a] bg-[#18181b] flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wide">AI Assistant</h3>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[#09090b]">
                 <AnimatePresence initial={false}>
                     {messages.map((message) => (
                         <motion.div
                             key={message.id}
-                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={cn(
+                                "flex gap-3 max-w-[90%]",
+                                message.role === 'user' ? "ml-auto flex-row-reverse" : ""
+                            )}
                         >
-                            <div
-                                className={`
-                                    max-w-[85%] rounded-lg px-3 py-2 text-xs leading-relaxed
-                                    ${message.role === 'user'
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                                        : 'bg-white/10 text-foreground border border-white/5'
-                                    }
-                                `}
-                            >
+                            <div className={cn(
+                                "w-6 h-6 rounded flex items-center justify-center shrink-0 mt-0.5",
+                                message.role === 'user' ? "bg-[#27272a]" : "bg-primary"
+                            )}>
+                                {message.role === 'user' ? <User className="w-3 h-3 text-zinc-400" /> : <Bot className="w-3 h-3 text-white" />}
+                            </div>
+
+                            <div className={cn(
+                                "rounded px-3 py-2 text-xs leading-relaxed border",
+                                message.role === 'user'
+                                    ? "bg-[#18181b] border-[#27272a] text-zinc-200"
+                                    : "bg-[#1c1c20] border-[#27272a] text-zinc-300"
+                            )}>
                                 <p className="whitespace-pre-wrap">{message.content}</p>
                             </div>
                         </motion.div>
@@ -137,41 +144,35 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex justify-start"
+                        className="flex gap-3"
                     >
-                        <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
-                            <div className="flex space-x-1">
-                                <div className="w-1.5 h-1.5 bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="w-1.5 h-1.5 bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="w-1.5 h-1.5 bg-foreground-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
+                        <div className="w-6 h-6 rounded bg-[#27272a] flex items-center justify-center shrink-0">
+                            <RefreshCw className="w-3 h-3 text-zinc-500 animate-spin" />
                         </div>
+                        <div className="text-xs text-zinc-500 py-1.5 animate-pulse">Processing...</div>
                     </motion.div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
-            <div className="p-3 border-t border-white/5 bg-white/[0.02]">
+            <div className="p-3 border-t border-[#27272a] bg-[#18181b]">
                 <div className="relative">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={handleKeyPress}
-                        placeholder="Type a message..."
-                        className="w-full bg-black/20 text-foreground text-xs rounded-md pl-3 pr-10 py-2.5 border border-white/10 focus:outline-none focus:border-primary/50 transition-colors placeholder:text-foreground-muted"
+                        placeholder="Enter command or query..."
+                        className="w-full bg-[#09090b] text-zinc-200 text-xs rounded border border-[#27272a] pl-3 pr-10 py-3 focus:outline-none focus:border-primary/50 transition-colors placeholder:text-zinc-600 font-mono"
                         disabled={loading}
                     />
                     <button
                         onClick={handleSend}
                         disabled={loading || !input.trim()}
-                        className="absolute right-1.5 top-1.5 p-1 text-foreground-muted hover:text-primary transition-colors disabled:opacity-50"
+                        className="absolute right-2 top-2 p-1 text-zinc-500 hover:text-primary transition-colors disabled:opacity-50"
                     >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
+                        <Send className="w-4 h-4" />
                     </button>
                 </div>
             </div>
