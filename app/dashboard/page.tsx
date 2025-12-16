@@ -9,9 +9,11 @@ import AgentVisualization from '@/components/agents/AgentVisualization';
 import AnomalyDisplay from '@/components/results/AnomalyDisplay';
 import ChatInterface from '@/components/chat/ChatInterface';
 import NotificationsList from '@/components/notifications/NotificationsList';
+import AppointmentsList from '@/components/appointments/AppointmentsList';
 import { AgentEvent, AnomalyDetectionResult } from '@/lib/agents/types';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, Calendar, FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
     const { user, loading: authLoading } = useAuth();
@@ -75,29 +77,43 @@ export default function Dashboard() {
         }
     };
 
-    if (authLoading) return <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center text-zinc-500"><Loader2 className="animate-spin w-5 h-5 mr-2" /> Initializing...</div>;
+    if (authLoading) return <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center text-zinc-500 font-mono text-sm tracking-widest uppercase"><Loader2 className="animate-spin w-4 h-4 mr-3 text-primary" /> System Initializing...</div>;
     if (!user) return null;
 
     return (
-        <div className="flex bg-[#09090b] min-h-screen text-zinc-200 font-sans selection:bg-[#5e6ad2] selection:text-white">
+        <div className="flex bg-[#050505] min-h-screen text-zinc-200 font-sans selection:bg-[#5e6ad2] selection:text-white overflow-hidden">
             <Sidebar currentView={view} onNavigate={setView} />
 
-            <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative">
-                <div className="max-w-[1600px] mx-auto p-8">
+            <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative bg-[#050505]">
+                <div className="max-w-[1920px] mx-auto p-8 lg:p-12">
 
                     {/* Header */}
-                    <header className="mb-8 flex items-center justify-between">
+                    <header className="mb-10 flex items-center justify-between border-b border-[#27272a] pb-6">
                         <div>
-                            <h2 className="text-2xl font-bold text-white tracking-tight">
+                            <h2 className="text-3xl font-bold text-white tracking-tight">
                                 {view === 'dashboard' ? 'Overview' :
                                     view === 'analysis' ? 'Analysis Console' :
-                                        view.charAt(0).toUpperCase() + view.slice(1)}
+                                        view === 'anomalies' ? 'Anomaly Reports' :
+                                            view === 'schedule' ? 'Maintenance Schedule' :
+                                                view === 'notifications' ? 'System Logs' :
+                                                    view.charAt(0).toUpperCase() + view.slice(1)}
                             </h2>
-                            <p className="text-sm text-zinc-500 mt-1">
+                            <p className="text-sm text-zinc-500 mt-2 font-medium">
                                 {view === 'dashboard' ? 'Real-time fleet monitoring and system status.' :
                                     view === 'analysis' ? 'Execute predictive models and review agent logs.' :
-                                        'System module.'}
+                                        view === 'anomalies' ? 'Detailed breakdown of detected vehicle faults.' :
+                                            view === 'schedule' ? 'Upcoming service appointments and history.' :
+                                                view === 'notifications' ? 'Historical alert log and dispatch records.' :
+                                                    'System module.'}
                             </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="px-3 py-1 bg-[#18181b] border border-[#27272a] text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                                ENV: PROD-US-EAST
+                            </div>
+                            <div className="px-3 py-1 bg-[#18181b] border border-[#27272a] text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                                LATENCY: 24ms
+                            </div>
                         </div>
                     </header>
 
@@ -109,33 +125,30 @@ export default function Dashboard() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="space-y-6"
+                                className="space-y-8"
                             >
-                                {/* Quick Stats Row would go here */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="p-6 bg-[#18181b] border border-[#27272a] rounded-lg">
-                                        <div className="text-sm text-zinc-500 font-medium">System Status</div>
-                                        <div className="text-2xl font-bold text-emerald-500 mt-2">Operational</div>
-                                    </div>
-                                    <div className="p-6 bg-[#18181b] border border-[#27272a] rounded-lg">
-                                        <div className="text-sm text-zinc-500 font-medium">Active Agents</div>
-                                        <div className="text-2xl font-bold text-white mt-2">6</div>
-                                    </div>
-                                    <div className="p-6 bg-[#18181b] border border-[#27272a] rounded-lg">
-                                        <div className="text-sm text-zinc-500 font-medium">Analyzed Records</div>
-                                        <div className="text-2xl font-bold text-white mt-2">-</div>
-                                    </div>
+                                {/* KPI Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                    <KpiCard title="System Status" value="OPERATIONAL" color="text-emerald-500" />
+                                    <KpiCard title="Active Agents" value="6" color="text-white" />
+                                    <KpiCard title="Analyzed Records" value={analysisResult?.anomalies ? "COMPLETE" : "IDLE"} color="text-white" />
+                                    <KpiCard title="Pending Alerts" value="0" color="text-zinc-500" />
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                    <div className="lg:col-span-2 space-y-6">
-                                        <div className="p-6 bg-[#18181b] border border-[#27272a] rounded-lg">
-                                            <h3 className="text-sm font-bold text-white mb-4">Quick Upload</h3>
-                                            <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
+                                    <div className="lg:col-span-2 flex flex-col gap-8">
+                                        <div className="p-8 bg-[#09090b] border border-[#27272a] h-full flex flex-col justify-center items-center text-center group hover:border-[#3f3f46] transition-colors cursor-pointer" onClick={() => setView('analysis')}>
+                                            <div className="w-16 h-16 bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                                <Loader2 className="w-8 h-8 text-zinc-500 group-hover:text-primary transition-colors" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-white mb-2">New Analysis</h3>
+                                            <p className="text-sm text-zinc-500 max-w-md">Jump to the Analysis Console to ingest new sensor telemetry data.</p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-sm font-bold text-white mb-4">Notifications</h3>
+                                    <div className="bg-[#09090b] border border-[#27272a] p-6 overflow-hidden flex flex-col">
+                                        <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
+                                            <FileText className="w-4 h-4 text-zinc-500" /> Recent Logs
+                                        </h3>
                                         <NotificationsList />
                                     </div>
                                 </div>
@@ -150,6 +163,10 @@ export default function Dashboard() {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-8"
                             >
+                                <div className="bg-[#09090b] border border-[#27272a] p-8">
+                                    <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
+                                </div>
+
                                 <AgentVisualization events={events} />
 
                                 {analysisResult && (
@@ -167,10 +184,59 @@ export default function Dashboard() {
                                 )}
                             </motion.div>
                         )}
+
+                        {/* Full Screen Views for the "Empty" Tabs */}
+                        {view === 'anomalies' && (
+                            <motion.div key="anomalies" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                {analysisResult ? (
+                                    <AnomalyDisplay result={analysisResult} />
+                                ) : (
+                                    <EmptyState icon={AlertTriangle} title="No Active Reports" desc="Run an analysis to generate anomaly reports." />
+                                )}
+                            </motion.div>
+                        )}
+
+                        {view === 'schedule' && (
+                            <motion.div key="schedule" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                <div className="bg-[#09090b] border border-[#27272a] p-8 min-h-[500px]">
+                                    <AppointmentsList />
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {view === 'notifications' && (
+                            <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                <div className="bg-[#09090b] border border-[#27272a] p-8 min-h-[500px]">
+                                    <NotificationsList />
+                                </div>
+                            </motion.div>
+                        )}
+
                     </AnimatePresence>
 
                 </div>
             </main>
         </div>
     );
+}
+
+function KpiCard({ title, value, color }: { title: string, value: string, color: string }) {
+    return (
+        <div className="p-6 bg-[#09090b] border border-[#27272a] flex flex-col justify-between h-32 hover:border-[#3f3f46] transition-colors">
+            <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest">{title}</div>
+            <div className={cn("text-3xl font-bold tracking-tight", color)}>{value}</div>
+        </div>
+    )
+}
+
+function EmptyState({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
+    return (
+        <div className="h-[400px] w-full border border-[#27272a] border-dashed bg-[#09090b] flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 bg-[#18181b] flex items-center justify-center mb-6">
+                <Icon className="w-8 h-8 text-zinc-600" />
+            </div>
+            <h3 className="text-xl font-bold text-zinc-300">{title}</h3>
+            <p className="text-sm text-zinc-500 mt-2 max-w-sm">{desc}</p>
+        </div>
+    )
 }

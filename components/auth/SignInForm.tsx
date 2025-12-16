@@ -1,99 +1,86 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, signUp } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
+import { signIn } from '@/lib/firebase/auth';
+import { motion } from 'framer-motion';
+import { Loader2, ArrowRight } from 'lucide-react';
 
 export default function SignInForm() {
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setError('');
 
-        const result = isSignUp
-            ? await signUp(email, password)
-            : await signIn(email, password);
+        const result = await signIn(email, password);
 
         if (result.success) {
             router.push('/dashboard');
         } else {
-            setError(result.error || 'Authentication failed');
+            setError('Invalid credentials. Access denied.');
+            setLoading(false);
         }
-
-        setLoading(false);
     };
 
     return (
-        <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {isSignUp ? 'Create Account' : 'Sign In'}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="you@example.com"
-                    />
-                </div>
-
-                <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Password
-                    </label>
-                    <input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="••••••••"
-                    />
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                        {error}
-                    </div>
-                )}
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                    {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
-                </button>
-            </form>
-
-            <div className="mt-6 text-center">
-                <button
-                    onClick={() => {
-                        setIsSignUp(!isSignUp);
-                        setError('');
-                    }}
-                    className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                    {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-                </button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                    Operator ID
+                </label>
+                <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-[#050505] border border-[#27272a] text-white px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-[#0a0a0c] transition-all placeholder:text-zinc-700"
+                    placeholder="name@enterprise.com"
+                    required
+                />
             </div>
-        </div>
+
+            <div>
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                    Security Key
+                </label>
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-[#050505] border border-[#27272a] text-white px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 focus:bg-[#0a0a0c] transition-all placeholder:text-zinc-700"
+                    placeholder="••••••••"
+                    required
+                />
+            </div>
+
+            {error && (
+                <div className="p-3 bg-red-950/20 border border-red-900/50 text-red-400 text-xs font-mono">
+                    ERROR: {error}
+                </div>
+            )}
+
+            <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wide mt-2"
+            >
+                {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                    <>
+                        Authenticate <ArrowRight className="w-4 h-4" />
+                    </>
+                )}
+            </button>
+
+            <div className="text-center pt-2">
+                <a href="#" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">Recover Access Credentials</a>
+            </div>
+        </form>
     );
 }
