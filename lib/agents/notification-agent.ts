@@ -31,26 +31,36 @@ export async function sendAnomalyNotifications(
         for (const anomaly of anomalies) {
             const vehicle = vehicleInfo.find(v => v.vin === anomaly.vin || anomaly.vehicleId.includes(String(vehicleInfo.indexOf(v))));
 
-            await addDoc(collection(db, 'notifications'), {
-                userId: userEmail,
+            // Clean data - remove undefined values for Firestore
+            const notificationData: any = {
+                userId: userEmail || 'anonymous',
                 anomaly: {
                     id: anomaly.id,
                     type: anomaly.type,
                     severity: anomaly.severity,
                     description: anomaly.description,
                     recommendation: anomaly.recommendation,
-                    affectedComponent: anomaly.affectedComponent,
                 },
-                vehicleInfo: vehicle ? {
-                    vin: vehicle.vin,
-                    make: vehicle.make,
-                    model: vehicle.model,
-                    year: vehicle.year,
-                } : null,
                 read: false,
                 createdAt: Date.now(),
-            });
+            };
 
+            // Only add vehicle info if it exists and has data
+            if (vehicle && vehicle.vin) {
+                notificationData.vehicleInfo = {
+                    vin: vehicle.vin,
+                    make: vehicle.make || 'Unknown',
+                    model: vehicle.model || 'Unknown',
+                    year: vehicle.year || 0,
+                };
+            }
+
+            // Add affected component if it exists
+            if (anomaly.affectedComponent) {
+                notificationData.anomaly.affectedComponent = anomaly.affectedComponent;
+            }
+
+            await addDoc(collection(db, 'notifications'), notificationData);
             notificationsCreated++;
         }
 

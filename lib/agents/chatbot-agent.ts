@@ -15,8 +15,10 @@ export interface ChatContext {
 
 export interface ChatResponse {
     message: string;
-    intent?: 'question' | 'schedule_request' | 'general';
+    intent: 'scheduling' | 'general' | 'status';
     extractedDate?: string;
+    response?: string;  // For fallback
+    suggestedActions?: string[];  // For recommendations
 }
 
 /**
@@ -62,20 +64,40 @@ Respond in JSON format:
         const response = await model.invoke(prompt);
         const content = response.content.toString();
 
-        // Extract JSON from response
+        // Extract JSON from response (handle markdown code blocks)
         let jsonContent = content;
-        const jsonMatch = content.match(/```json\n ? ([\s\S] *?) \n ? ```/);
+        const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/);
         if (jsonMatch) {
             jsonContent = jsonMatch[1];
+        } else {
+            // Try to find JSON object directly
+            const jsonObjMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonObjMatch) {
+                jsonContent = jsonObjMatch[0];
+            }
         }
 
-        const result = JSON.parse(jsonContent);
-
-        return {
-            message: result.message,
-            intent: result.intent || 'general',
-            extractedDate: result.extractedDate,
-        };
+        try {
+            const result = JSON.parse(jsonContent);
+            // The requested change implies a different return structure,
+            // mapping to the existing ChatResponse interface as best as possible.
+            return {
+                message: result.response || result.message || content, // Prioritize 'response', then 'message', then raw content
+                intent: result.intent || 'general',
+                extractedDate: result.extractedDate,
+                response: result.response || content, // New field
+                suggestedActions: result.suggestedActions || [], // New field
+            };
+        } catch (error) {
+            console.error('Failed to parse chatbot JSON, using raw content:', error);
+            // Fallback to raw content if JSON parsing fails
+            return {
+                message: content,
+                intent: 'general', // Default intent on error
+                response: content,
+                suggestedActions: [],
+            };
+        }
     } catch (error) {
         console.error('Chatbot error:', error);
         return {
