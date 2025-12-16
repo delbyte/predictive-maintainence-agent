@@ -42,9 +42,9 @@ export interface SensorData {
   engineTemp?: number;
   oilPressure?: number;
   brakeWear?: number;
-  tirePress ure ?: number[];
-batteryVoltage ?: number;
-[key: string]: any;
+  tirePressure?: number[];
+  batteryVoltage?: number;
+  [key: string]: any;
 }
 
 export interface Anomaly {
