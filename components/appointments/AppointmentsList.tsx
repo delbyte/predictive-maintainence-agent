@@ -39,8 +39,7 @@ export default function AppointmentsList() {
         try {
             const q = query(
                 collection(db, 'appointments'),
-                where('userId', '==', user.email),
-                orderBy('appointmentDate', 'desc')
+                where('userId', '==', user.email)
             );
 
             const querySnapshot = await getDocs(q);
@@ -48,6 +47,9 @@ export default function AppointmentsList() {
                 id: doc.id,
                 ...doc.data(),
             })) as Appointment[];
+
+            // Sort on client side instead
+            apps.sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
 
             setAppointments(apps);
         } catch (error) {
@@ -115,8 +117,8 @@ export default function AppointmentsList() {
                                         {appointment.anomalies.map((anomaly, i) => (
                                             <li key={i} className="text-sm text-gray-900 flex items-center space-x-2">
                                                 <span className={`w-2 h-2 rounded-full ${anomaly.severity === 'critical' ? 'bg-red-500' :
-                                                        anomaly.severity === 'high' ? 'bg-orange-500' :
-                                                            anomaly.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
+                                                    anomaly.severity === 'high' ? 'bg-orange-500' :
+                                                        anomaly.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
                                                     }`} />
                                                 <span>{anomaly.type}</span>
                                             </li>
