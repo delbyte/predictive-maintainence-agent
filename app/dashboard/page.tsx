@@ -27,6 +27,7 @@ export default function Dashboard() {
     }, [user, authLoading, router]);
 
     const handleFileUpload = async (file: File) => {
+        console.log('handleFileUpload called with:', file.name);
         setAnalyzing(true);
         setEvents([]);
         setAnalysisResult(null);
@@ -36,12 +37,16 @@ export default function Dashboard() {
             formData.append('file', file);
             formData.append('userEmail', user?.email || '');
 
+            console.log('Calling /api/analyze...');
+
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 body: formData,
             });
 
+            console.log('API response status:', response.status);
             const data = await response.json();
+            console.log('API response data:', data);
 
             if (data.success) {
                 setAnalysisResult(data.state);

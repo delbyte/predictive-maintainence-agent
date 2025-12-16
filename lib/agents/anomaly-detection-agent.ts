@@ -1,5 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { Anomaly, CSVData, VehicleInfo, SensorData } from '@/lib/agents/types';
+import { CSVData, Anomaly } from '@/lib/agents/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const model = new ChatGoogleGenerativeAI({
@@ -9,61 +9,52 @@ const model = new ChatGoogleGenerativeAI({
 });
 
 export interface AnomalyDetectionResult {
+    success: boolean;
     anomalies: Anomaly[];
-    analysis: string;
+    summary?: string;
+    error?: string;
 }
 
 /**
- * Anomaly Detection Agent - Analyzes vehicle data for potential issues
+ * Anomaly Detection Agent - Uses Gemini to analyze any CSV data for anomalies
  */
 export async function detectAnomalies(csvData: CSVData): Promise<AnomalyDetectionResult> {
-    const vehicleInfo = csvData.vehicleInfo || [];
+    try {
+        // Convert CSV data to a format Gemini can analyze
+        const dataPreview = csvData.rows.slice(0, 10).map(row => JSON.stringify(row)).join('\n');
 
-    if (vehicleInfo.length === 0) {
-        return {
-            anomalies: [],
-            analysis: 'No vehicle data available for analysis',
-        };
-    }
+        const prompt = `You are an expert data analyst. Analyze the following CSV data and identify any anomalies, issues, or patterns that might indicate problems.
 
-    const prompt = `You are an expert automotive diagnostics AI. Analyze the following vehicle sensor data and identify any anomalies or potential maintenance issues.
+CSV Headers: ${csvData.headers.join(', ')}
 
-For each vehicle, you have:
-- Basic info (VIN, make, model, year, mileage)
-- Sensor readings (engine temperature, oil pressure, brake wear, tire pressure, battery voltage, etc.)
+Sample Data (first 10 rows):
+${dataPreview}
 
-Vehicle Data:
-${JSON.stringify(vehicleInfo, null, 2)}
+Total Rows: ${csvData.rows.length}
 
 Instructions:
-1. Analyze each vehicle's sensor data for anomalies
-2. Compare readings against typical acceptable ranges
-3. Identify severity levels: low, medium, high, critical
-4. Provide specific recommendations
+1. Analyze the data for any anomalies, unusual patterns, or potential issues
+2. Identify severity: critical, high, medium, or low
+3. Provide recommendations for each issue found
 
-Return your analysis in the following JSON format:
+Respond in JSON format:
 {
   "anomalies": [
     {
-      "vehicleId": "index or VIN",
-      "vin": "VIN if available",
-      "type": "specific issue type (e.g., 'High Engine Temperature', 'Low Oil Pressure')",
-      "severity": "low|medium|high|critical",
-      "description": "detailed description of the issue",
-      "recommendation": "specific action to take",
-      "affectedComponent": "component name"
+      "type": "Brief anomaly type",
+      "severity": "critical|high|medium|low",
+      "description": "Detailed description",
+      "recommendation": "What to do about it",
+      "affectedRows": "number or 'multiple'"
     }
   ],
-  "summary": "overall analysis summary"
-}
+  "summary": "Overall analysis summary"
+}`;
 
-Be thorough and precise. If no anomalies are detected, return an empty anomalies array.`;
-
-    try {
         const response = await model.invoke(prompt);
         const content = response.content.toString();
 
-        // Extract JSON from response (handle markdown code blocks)
+        // Extract JSON from response
         let jsonContent = content;
         const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/);
         if (jsonMatch) {
@@ -72,39 +63,29 @@ Be thorough and precise. If no anomalies are detected, return an empty anomalies
 
         const result = JSON.parse(jsonContent);
 
-        // Add IDs and timestamps to anomalies
-        const anomalies: Anomaly[] = result.anomalies.map((anomaly: any) => ({
+        // Convert to our Anomaly format
+        const anomalies: Anomaly[] = (result.anomalies || []).map((a: any, index: number) => ({
             id: uuidv4(),
-            vehicleId: anomaly.vehicleId || anomaly.vin || 'unknown',
-            vin: anomaly.vin,
-            type: anomaly.type,
-            severity: anomaly.severity,
-            description: anomaly.description,
-            recommendation: anomaly.recommendation,
-            affectedComponent: anomaly.affectedComponent,
+            vehicleId: `row-${index}`,
+            type: a.type,
+            severity: a.severity,
+            description: a.description,
+            recommendation: a.recommendation,
             detectedAt: Date.now(),
+            affectedComponent: a.affectedRows || 'data',
         }));
 
         return {
+            success: true,
             anomalies,
-            analysis: result.summary || 'Analysis complete',
+            summary: result.summary || `Found ${anomalies.length} potential issues`,
         };
     } catch (error) {
         console.error('Anomaly detection error:', error);
         return {
+            success: false,
             anomalies: [],
-            analysis: `Error during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            error: error instanceof Error ? error.message : 'Anomaly detection failed',
         };
     }
 }
-
-/**
- * Get typical ranges for common sensor types (for reference)
- */
-export const TYPICAL_SENSOR_RANGES = {
-    engineTemp: { min: 195, max: 220, unit: '°F' },
-    oilPressure: { min: 20, max: 60, unit: 'PSI' },
-    brakeWear: { min: 0, max: 30, unit: '%' }, // 0% = new, 100% = completely worn
-    tirePressure: { min: 30, max: 35, unit: 'PSI' },
-    batteryVoltage: { min: 12.4, max: 12.8, unit: 'V' },
-};

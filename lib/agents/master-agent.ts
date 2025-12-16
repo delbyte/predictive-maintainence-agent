@@ -77,8 +77,8 @@ export class MasterAgent {
             this.emitEvent({
                 type: 'agent_completed',
                 agentType: 'csv_analysis',
-                message: csvResult.summary || 'CSV analysis complete',
-                data: { vehicleCount: csvResult.data.vehicleInfo?.length || 0 },
+                message: csvResult.message || 'CSV analysis complete',
+                data: { rowCount: csvResult.data.rows.length },
             });
 
             // Step 2: Anomaly Detection
@@ -94,7 +94,7 @@ export class MasterAgent {
             this.emitEvent({
                 type: 'agent_completed',
                 agentType: 'anomaly_detection',
-                message: anomalyResult.analysis,
+                message: anomalyResult.summary || 'Anomaly detection complete',
                 data: {
                     anomalyCount: anomalyResult.anomalies.length,
                     criticalCount: anomalyResult.anomalies.filter(a => a.severity === 'critical').length,

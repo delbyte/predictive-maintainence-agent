@@ -11,51 +11,61 @@ export interface ParsedCSVResult {
  * Parse CSV file and extract automobile data
  */
 export async function parseCSVFile(file: File): Promise<ParsedCSVResult> {
-    return new Promise((resolve) => {
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            dynamicTyping: true,
-            complete: (results) => {
-                try {
-                    const headers = results.meta.fields || [];
-                    const rows = results.data as Record<string, any>[];
+    return new Promise(async (resolve) => {
+        try {
+            // Read file as text for Node.js compatibility
+            const text = await file.text();
 
-                    if (rows.length === 0) {
+            Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+                complete: (results) => {
+                    try {
+                        const headers = results.meta.fields || [];
+                        const rows = results.data as Record<string, any>[];
+
+                        if (rows.length === 0) {
+                            resolve({
+                                success: false,
+                                error: 'CSV file is empty',
+                            });
+                            return;
+                        }
+
+                        // Extract vehicle information from CSV
+                        const vehicleInfo: VehicleInfo[] = rows.map((row, index) => {
+                            return extractVehicleInfo(row, index);
+                        });
+
+                        resolve({
+                            success: true,
+                            data: {
+                                headers,
+                                rows,
+                                vehicleInfo,
+                            },
+                        });
+                    } catch (error) {
                         resolve({
                             success: false,
-                            error: 'CSV file is empty',
+                            error: error instanceof Error ? error.message : 'Failed to parse CSV',
                         });
-                        return;
                     }
-
-                    // Extract vehicle information from CSV
-                    const vehicleInfo: VehicleInfo[] = rows.map((row, index) => {
-                        return extractVehicleInfo(row, index);
-                    });
-
-                    resolve({
-                        success: true,
-                        data: {
-                            headers,
-                            rows,
-                            vehicleInfo,
-                        },
-                    });
-                } catch (error) {
+                },
+                error: (error) => {
                     resolve({
                         success: false,
-                        error: error instanceof Error ? error.message : 'Failed to parse CSV',
+                        error: error.message,
                     });
-                }
-            },
-            error: (error) => {
-                resolve({
-                    success: false,
-                    error: error.message,
-                });
-            },
-        });
+                },
+            });
+        } catch (error) {
+            resolve({
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to read file',
+            });
+        }
     });
 }
 

@@ -10,10 +10,12 @@ export const maxDuration = 60;
  * Analyzes uploaded CSV file using the master agent workflow
  */
 export async function POST(request: NextRequest) {
+    const events: AgentEvent[] = [];
+
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
-        const userEmail = formData.get('userEmail') as string | null;
+        const userEmail = formData.get('userEmail') as string;
 
         if (!file) {
             return NextResponse.json(
@@ -22,38 +24,46 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate file type
-        if (!file.name.endsWith('.csv')) {
-            return NextResponse.json(
-                { error: 'Invalid file type. Please upload a CSV file.' },
-                { status: 400 }
-            );
-        }
+        console.log('Processing file:', file.name, file.size);
 
-        // Store events for streaming response
-        const events: AgentEvent[] = [];
+        // Convert to proper File for Node.js
+        const buffer = await file.arrayBuffer();
+        const blob = new Blob([buffer], { type: file.type });
+        const nodeFile = new File([blob], file.name, { type: file.type });
 
-        // Execute master agent workflow
+        // Run master agent
         const result = await runMasterAgent(
-            file,
-            userEmail || undefined,
+            nodeFile,
+            userEmail,
             (event) => {
                 events.push(event);
+                console.log('Agent event:', event.type, event.agentType, event.message);
             }
         );
+
+        const anomalyCount = result.anomalies?.length || 0;
+        const criticalCount = result.anomalies?.filter(a => a.severity === 'critical').length || 0;
 
         return NextResponse.json({
             success: !result.error,
             state: result,
             events,
-            anomalyCount: result.anomalies?.length || 0,
-            criticalCount: result.anomalies?.filter(a => a.severity === 'critical').length || 0,
+            anomalyCount,
+            criticalCount,
+            message: result.error || `Analyzed ${anomalyCount} anomalies (${criticalCount} critical)`,
         });
 
     } catch (error) {
         console.error('Analysis error:', error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'Analysis failed' },
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Analysis failed',
+                state: { error: error instanceof Error ? error.message : 'Unknown error' },
+                events,
+                anomalyCount: 0,
+                criticalCount: 0,
+            },
             { status: 500 }
         );
     }

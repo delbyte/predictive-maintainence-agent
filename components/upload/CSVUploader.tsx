@@ -40,8 +40,10 @@ export default function CSVUploader({ onUpload, loading }: CSVUploaderProps) {
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
+        console.log('File input changed:', e.target.files);
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
+            console.log('File selected:', file.name, file.size);
             setSelectedFile(file);
             onUpload(file);
         }
