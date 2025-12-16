@@ -37,26 +37,51 @@ export default function Dashboard() {
             formData.append('file', file);
             formData.append('userEmail', user?.email || '');
 
-            console.log('Calling /api/analyze...');
+            console.log('Calling /api/analyze with streaming...');
 
             const response = await fetch('/api/analyze', {
                 method: 'POST',
                 body: formData,
             });
 
-            console.log('API response status:', response.status);
-            const data = await response.json();
-            console.log('API response data:', data);
+            if (!response.ok || !response.body) {
+                throw new Error('Failed to start analysis');
+            }
 
-            if (data.success) {
-                setAnalysisResult(data.state);
-                setEvents(data.events || []);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
 
-                if (data.anomalyCount > 0) {
-                    setShowChat(true);
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            if (data.type === 'agent_event') {
+                                // Add event to visualization
+                                setEvents(prev => [...prev, data.event]);
+                            } else if (data.type === 'complete') {
+                                // Final result
+                                setAnalysisResult(data.state);
+                                if (data.anomalyCount > 0) {
+                                    setShowChat(true);
+                                }
+                            } else if (data.type === 'error') {
+                                alert(`Analysis failed: ${data.message}`);
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse line:', line, e);
+                        }
+                    }
                 }
-            } else {
-                alert(`Analysis failed: ${data.error}`);
             }
         } catch (error) {
             console.error('Upload error:', error);

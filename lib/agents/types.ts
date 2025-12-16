@@ -83,8 +83,15 @@ export interface AgentLog {
 }
 
 // Event types for real-time updates
+export type AgentEventType =
+  | 'agent_started'
+  | 'agent_progress'
+  | 'agent_thinking'  // NEW: for real-time LLM token streaming
+  | 'agent_completed'
+  | 'agent_failed';
+
 export interface AgentEvent {
-  type: 'agent_started' | 'agent_progress' | 'agent_completed' | 'agent_failed';
+  type: AgentEventType;
   agentType: AgentType;
   message: string;
   data?: any;

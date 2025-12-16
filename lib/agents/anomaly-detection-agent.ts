@@ -1,5 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { CSVData, Anomaly } from '@/lib/agents/types';
+import { CSVData, Anomaly, AgentEvent } from '@/lib/agents/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const model = new ChatGoogleGenerativeAI({
@@ -17,8 +17,12 @@ export interface AnomalyDetectionResult {
 
 /**
  * Anomaly Detection Agent - Uses Gemini to analyze any CSV data for anomalies
+ * NOW WITH REAL-TIME TOKEN STREAMING!
  */
-export async function detectAnomalies(csvData: CSVData): Promise<AnomalyDetectionResult> {
+export async function detectAnomalies(
+    csvData: CSVData,
+    onEvent?: (event: Omit<AgentEvent, 'timestamp'>) => void
+): Promise<AnomalyDetectionResult> {
     try {
         // Convert CSV data to a format Gemini can analyze
         const dataPreview = csvData.rows.slice(0, 10).map(row => JSON.stringify(row)).join('\n');
@@ -51,12 +55,28 @@ Respond in JSON format:
   "summary": "Overall analysis summary"
 }`;
 
-        const response = await model.invoke(prompt);
-        const content = response.content.toString();
+        // Stream the response token-by-token
+        let fullResponse = '';
+        const stream = await model.stream(prompt);
+
+        for await (const chunk of stream) {
+            const token = chunk.content.toString();
+            fullResponse += token;
+
+            // Emit each token as it arrives
+            if (onEvent) {
+                onEvent({
+                    type: 'agent_thinking',
+                    agentType: 'anomaly_detection',
+                    message: token,
+                    data: { fullResponse }
+                });
+            }
+        }
 
         // Extract JSON from response
-        let jsonContent = content;
-        const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/);
+        let jsonContent = fullResponse;
+        const jsonMatch = fullResponse.match(/```json\n?([\s\S]*?)\n?```/);
         if (jsonMatch) {
             jsonContent = jsonMatch[1];
         }

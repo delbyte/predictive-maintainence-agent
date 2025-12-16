@@ -88,7 +88,10 @@ export class MasterAgent {
                 message: 'Detecting anomalies in vehicle data...',
             });
 
-            const anomalyResult = await detectAnomalies(csvResult.data);
+            const anomalyResult = await detectAnomalies(csvResult.data, (event) => {
+                // Forward streaming events
+                this.emitEvent(event);
+            });
             state.anomalies = anomalyResult.anomalies;
 
             this.emitEvent({

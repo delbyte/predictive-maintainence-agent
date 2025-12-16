@@ -2,7 +2,7 @@
 
 import { AgentEvent, AgentType } from '@/lib/agents/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface AgentVisualizationProps {
     events: AgentEvent[];
@@ -27,118 +27,110 @@ const agentNames: Record<AgentType, string> = {
 };
 
 export default function AgentVisualization({ events }: AgentVisualizationProps) {
-    const [activeAgents, setActiveAgents] = useState<Set<AgentType>>(new Set());
+    const logEndRef = useRef<HTMLDivElement>(null);
 
+    // Auto-scroll to latest event
     useEffect(() => {
-        const active = new Set<AgentType>();
-        events.forEach(event => {
-            if (event.type === 'agent_started' || event.type === 'agent_progress') {
-                active.add(event.agentType);
-            }
-        });
-        setActiveAgents(active);
+        logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [events]);
 
-    const allAgents: AgentType[] = ['master', 'csv_analysis', 'anomaly_detection', 'notification'];
+    const agents = Object.keys(agentNames).map(id => {
+        const agentEvents = events.filter(e => e.agentType === id);
+        const lastEvent = agentEvents[agentEvents.length - 1];
+
+        return {
+            id: id as AgentType,
+            name: agentNames[id as AgentType],
+            status: lastEvent?.type === 'agent_completed' ? 'completed' :
+                lastEvent?.type === 'agent_failed' ? 'failed' :
+                    lastEvent?.type === 'agent_started' ? 'active' : 'pending'
+        };
+    });
+
+    const currentAgent = events.length > 0 ? events[events.length - 1].agentType : null;
 
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Agent Workflow</h3>
+        <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Agent Workflow</h2>
 
-            {/* Agent Flow Diagram */}
-            <div className="flex items-center justify-between mb-8 relative">
-                {allAgents.map((agentType, index) => (
-                    <div key={agentType} className="flex items-center">
-                        <motion.div
-                            className="relative"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{
-                                scale: activeAgents.has(agentType) ? 1.1 : 1,
-                                opacity: 1
-                            }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <div
-                                className={`
-                  w-20 h-20 rounded-full flex items-center justify-center
-                `}
-                                style={{
-                                    backgroundColor: agentColors[agentType] + '20',
-                                    borderColor: agentColors[agentType],
-                                    borderWidth: '2px',
-                                    boxShadow: activeAgents.has(agentType) ? `0 0 0 4px ${agentColors[agentType]}40` : 'none',
-                                }}
-                            >
-                                <span className="text-2xl">
-                                    {agentType === 'master' && '🎯'}
-                                    {agentType === 'csv_analysis' && '📊'}
-                                    {agentType === 'anomaly_detection' && '🔍'}
-                                    {agentType === 'notification' && '📧'}
-                                </span>
-                            </div>
-
-                            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap text-xs font-medium text-gray-700">
-                                {agentNames[agentType]}
-                            </div>
-
-                            {activeAgents.has(agentType) && (
+            {/* Agent Status Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                {agents.map((agent) => (
+                    <motion.div
+                        key={agent.id}
+                        className={`p-3 rounded-lg border-2 transition-all ${agent.id === currentAgent
+                            ? 'border-blue-500 bg-blue-50'
+                            : agent.status === 'completed'
+                                ? 'border-green-500 bg-green-50'
+                                : agent.status === 'failed'
+                                    ? 'border-red-500 bg-red-50'
+                                    : 'border-gray-300 bg-gray-50'
+                            }`}
+                        animate={{
+                            scale: agent.id === currentAgent ? 1.05 : 1,
+                            boxShadow: agent.id === currentAgent
+                                ? '0 0 20px rgba(59, 130, 246, 0.5)'
+                                : '0 0 0 rgba(0, 0, 0, 0)',
+                        }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <div className="text-xs font-medium text-gray-700">{agent.name}</div>
+                        <div className="flex items-center mt-1">
+                            {agent.status === 'pending' && (
+                                <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                            )}
+                            {agent.status === 'active' && (
                                 <motion.div
-                                    className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 500 }}
+                                    className="w-2 h-2 bg-blue-500 rounded-full"
+                                    animate={{ scale: [1, 1.5, 1] }}
+                                    transition={{ repeat: Infinity, duration: 1 }}
                                 />
                             )}
-                        </motion.div>
-
-                        {index < allAgents.length - 1 && (
-                            <div className="flex-1 h-0.5 bg-gray-300 mx-2">
-                                <motion.div
-                                    className="h-full"
-                                    style={{ backgroundColor: agentColors[agentType] }}
-                                    initial={{ width: '0%' }}
-                                    animate={{ width: activeAgents.has(allAgents[index + 1]) ? '100%' : '0%' }}
-                                    transition={{ duration: 0.5 }}
-                                />
-                            </div>
-                        )}
-                    </div>
+                            {agent.status === 'completed' && (
+                                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                            )}
+                            {agent.status === 'failed' && (
+                                <div className="w-2 h-2 bg-red-500 rounded-full" />
+                            )}
+                            <span className="text-xs text-gray-600 ml-2 capitalize">
+                                {agent.status}
+                            </span>
+                        </div>
+                    </motion.div>
                 ))}
             </div>
 
-            {/* Event Log */}
-            <div className="mt-12 space-y-2 max-h-64 overflow-y-auto">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Activity Log</h4>
+            {/* Event Log - Auto-scrolling with Thinking Bubble */}
+            <div className="bg-gray-900 rounded-lg p-4 h-64 overflow-y-auto">
                 <AnimatePresence>
-                    {events.slice().reverse().slice(0, 10).map((event, index) => (
+                    {events.map((event, index) => (
                         <motion.div
-                            key={event.timestamp + index}
+                            key={index}
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0 }}
-                            className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg"
+                            className={`mb-2 text-sm ${event.type === 'agent_thinking' ? 'font-normal' : 'font-mono'
+                                } ${event.type === 'agent_failed' ? 'text-red-400' :
+                                    event.type === 'agent_completed' ? 'text-green-400' :
+                                        event.type === 'agent_started' ? 'text-blue-400' :
+                                            event.type === 'agent_thinking' ? 'text-yellow-300' :
+                                                'text-gray-400'
+                                }`}
                         >
-                            <div
-                                className="w-2 h-2 rounded-full mt-1.5"
-                                style={{ backgroundColor: agentColors[event.agentType] }}
-                            />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2">
-                                    <span
-                                        className="text-xs font-medium"
-                                        style={{ color: agentColors[event.agentType] }}
-                                    >
-                                        {agentNames[event.agentType]}
-                                    </span>
-                                    <span className="text-xs text-gray-500">
-                                        {new Date(event.timestamp).toLocaleTimeString()}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 mt-0.5">{event.message}</p>
-                            </div>
+                            {event.type === 'agent_thinking' ? (
+                                <span className="inline">{event.message}</span>
+                            ) : (
+                                <>
+                                    <span className="text-gray-500">
+                                        [{new Date(event.timestamp).toLocaleTimeString()}]
+                                    </span>{' '}
+                                    <span className="font-semibold">{event.agentType}:</span> {event.message}
+                                </>
+                            )}
                         </motion.div>
                     ))}
                 </AnimatePresence>
+                {/* Auto-scroll anchor */}
+                <div ref={logEndRef} />
             </div>
         </div>
     );
