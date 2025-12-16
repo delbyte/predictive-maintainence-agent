@@ -1,0 +1,6 @@
+VIN,Make,Model,Year,Mileage,Owner_Name,Owner_Email,Engine_Temp_F,Oil_Pressure_PSI,Brake_Wear_Percent,Tire_Pressure_FL,Tire_Pressure_FR,Tire_Pressure_RL,Tire_Pressure_RR,Battery_Voltage
+1HGBH41JXMN109186,Honda,Accord,2018,45000,John Doe,john@example.com,205,45,15,32,32,31,31,12.6
+1G1ZT53826F109149,Chevrolet,Malibu,2020,32000,Jane Smith,jane@example.com,230,25,45,28,29,28,28,12.2
+1FTFW1ET5DFC10314,Ford,F-150,2019,58000,Mike Johnson,mike@example.com,198,50,20,34,34,33,33,12.7
+5YJSA1E26HF177003,Tesla,Model S,2021,15000,Sarah Williams,sarah@example.com,185,38,5,35,35,35,35,13.1
+WDDGF8AB8FR123456,Mercedes,C-Class,2017,67000,Robert Brown,robert@example.com,240,18,60,25,24,25,24,11.8
