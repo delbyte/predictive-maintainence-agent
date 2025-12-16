@@ -2,7 +2,7 @@ import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Anomaly, AgentMessage } from '@/lib/agents/types';
 
 const model = new ChatGoogleGenerativeAI({
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.5-flash',
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     temperature: 0.7,
 });

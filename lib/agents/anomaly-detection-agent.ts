@@ -3,7 +3,7 @@ import { Anomaly, CSVData, VehicleInfo, SensorData } from '@/lib/agents/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const model = new ChatGoogleGenerativeAI({
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-2.5-flash',
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     temperature: 0.3,
 });
