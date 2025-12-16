@@ -1,5 +1,5 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
-import { CSVData, Anomaly, AgentEvent } from '@/lib/agents/types';
+import { CSVData, Anomaly, AgentEvent, AnomalyDetectionResult } from '@/lib/agents/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const model = new ChatGoogleGenerativeAI({
@@ -7,13 +7,6 @@ const model = new ChatGoogleGenerativeAI({
     apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     temperature: 0.3,
 });
-
-export interface AnomalyDetectionResult {
-    success: boolean;
-    anomalies: Anomaly[];
-    summary?: string;
-    error?: string;
-}
 
 /**
  * Anomaly Detection Agent - Uses Gemini to analyze any CSV data for anomalies

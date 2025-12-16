@@ -1,23 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useAuth } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
-import { useAuth, signOut } from '@/lib/firebase/auth';
+import { useEffect } from 'react';
 import CSVUploader from '@/components/upload/CSVUploader';
 import AgentVisualization from '@/components/agents/AgentVisualization';
 import AnomalyDisplay from '@/components/results/AnomalyDisplay';
 import ChatInterface from '@/components/chat/ChatInterface';
-import { AgentState, AgentEvent } from '@/lib/agents/types';
-
 import NotificationsList from '@/components/notifications/NotificationsList';
 import AppointmentsList from '@/components/appointments/AppointmentsList';
+import { AgentEvent, AnomalyDetectionResult } from '@/lib/agents/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, signOut } = useAuth();
     const router = useRouter();
     const [analyzing, setAnalyzing] = useState(false);
-    const [analysisResult, setAnalysisResult] = useState<AgentState | null>(null);
     const [events, setEvents] = useState<AgentEvent[]>([]);
+    const [analysisResult, setAnalysisResult] = useState<AnomalyDetectionResult | null>(null);
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
@@ -27,17 +28,14 @@ export default function Dashboard() {
     }, [user, authLoading, router]);
 
     const handleFileUpload = async (file: File) => {
-        console.log('handleFileUpload called with:', file.name);
         setAnalyzing(true);
-        setEvents([]);
+        setEvents([]); // Clear previous events
         setAnalysisResult(null);
 
         try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('userEmail', user?.email || '');
-
-            console.log('Calling /api/analyze with streaming...');
 
             const response = await fetch('/api/analyze', {
                 method: 'POST',
@@ -58,27 +56,22 @@ export default function Dashboard() {
 
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                buffer = lines.pop() || '';
 
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
-
                             if (data.type === 'agent_event') {
-                                // Add event to visualization
                                 setEvents(prev => [...prev, data.event]);
                             } else if (data.type === 'complete') {
-                                // Final result
                                 setAnalysisResult(data.state);
-                                if (data.anomalyCount > 0) {
-                                    setShowChat(true);
-                                }
+                                if (data.anomalyCount > 0) setShowChat(true);
                             } else if (data.type === 'error') {
-                                alert(`Analysis failed: ${data.message}`);
+                                alert(`Analysis error: ${data.message}`);
                             }
                         } catch (e) {
-                            console.warn('Failed to parse line:', line, e);
+                            console.warn('Parse error', e);
                         }
                     }
                 }
@@ -91,132 +84,93 @@ export default function Dashboard() {
         }
     };
 
-    const handleScheduleRequest = async (date: string) => {
-        if (!analysisResult?.anomalies || !user?.email) return;
-
-        try {
-            const response = await fetch('/api/schedule', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    preferredDate: date,
-                    anomalies: analysisResult.anomalies,
-                    userEmail: user.email,
-                    vehicleInfo: analysisResult.csvData?.vehicleInfo?.[0],
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                alert(`✅ ${data.message}`);
-                // Refresh the page to show the new appointment
-                window.location.reload();
-            } else {
-                alert(`Scheduling failed: ${data.error}`);
-            }
-        } catch (error) {
-            console.error('Scheduling error:', error);
-            alert('Failed to schedule appointment');
-        }
-    };
-
-    const handleSignOut = async () => {
-        await signOut();
-        router.push('/');
-    };
-
-    if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-gray-600">Loading...</div>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return null;
-    }
+    if (authLoading) return <div className="min-h-screen bg-background flex items-center justify-center text-foreground-muted">Loading System...</div>;
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="min-h-screen font-sans bg-background p-6 lg:p-12 relative overflow-hidden">
+            {/* Background Gradients */}
+            <div className="fixed top-0 left-0 w-full h-[500px] bg-primary/5 blur-[120px] pointer-events-none rounded-full" />
+
+            <div className="relative z-10 max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <header className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Predictive Maintenance Dashboard</h1>
-                        <p className="text-sm text-gray-600">{user.email}</p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Predictive Maintenance<span className="text-primary">.ai</span></h1>
+                        <p className="text-sm text-foreground-muted mt-1">Autonomous Vehicle Monitoring System</p>
                     </div>
-                    <button
-                        onClick={handleSignOut}
-                        className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                        Sign Out
-                    </button>
-                </div>
-            </header>
+                    <div className="flex items-center space-x-4">
+                        <div className="text-xs text-right hidden sm:block">
+                            <div className="text-foreground">{user.email}</div>
+                            <div className="text-success flex items-center justify-end gap-1">
+                                <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
+                                Online
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => signOut()}
+                            className="text-xs px-3 py-1.5 rounded border border-white/10 hover:bg-white/5 transition-colors text-foreground-muted hover:text-foreground"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
+                </header>
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="space-y-8">
-                    {/* Notifications & Appointments Row */}
-                    <div className="grid lg:grid-cols-2 gap-8">
-                        <section>
+                {/* Main Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    {/* Left Column: Context & Chat (30%) */}
+                    <div className="lg:col-span-4 space-y-6">
+                        {/* Upload Card */}
+                        <div className="glass-panel p-6 rounded-xl">
+                            <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider opacity-70">Data Ingestion</h3>
+                            <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
+                        </div>
+
+                        {/* Quick Stats / History */}
+                        <div className="glass-panel p-6 rounded-xl min-h-[300px]">
+                            <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider opacity-70">System Events</h3>
                             <NotificationsList />
-                        </section>
-                        <section>
-                            <AppointmentsList />
-                        </section>
+                        </div>
                     </div>
 
-                    {/* Upload Section */}
-                    <section>
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload Vehicle Data</h2>
-                        <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
-                    </section>
+                    {/* Right Column: Visualization & Results (70%) */}
+                    <div className="lg:col-span-8 space-y-6">
 
-                    {/* Agent Visualization */}
-                    {events.length > 0 && (
-                        <section>
+                        {/* Agent Visualization */}
+                        <div className="h-[500px] w-full">
                             <AgentVisualization events={events} />
-                        </section>
-                    )}
+                        </div>
 
-                    {/* Results */}
-                    {analysisResult && (
-                        <div className="grid lg:grid-cols-2 gap-8">
-                            {/* Anomalies */}
-                            <section>
-                                <AnomalyDisplay anomalies={analysisResult.anomalies || []} />
-                            </section>
-
-                            {/* Chat Interface */}
-                            {showChat && (
-                                <section>
-                                    <ChatInterface
-                                        anomalies={analysisResult.anomalies}
-                                        vehicleInfo={analysisResult.csvData?.vehicleInfo?.[0]}
-                                        onScheduleRequest={handleScheduleRequest}
-                                    />
-                                </section>
+                        {/* Results Area */}
+                        <AnimatePresence>
+                            {analysisResult && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                >
+                                    <AnomalyDisplay result={analysisResult} />
+                                </motion.div>
                             )}
-                        </div>
-                    )}
+                        </AnimatePresence>
 
-                    {/* Empty State */}
-                    {!analysisResult && !analyzing && (
-                        <div className="text-center py-12">
-                            <div className="text-4xl mb-4">📊</div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">
-                                No data analyzed yet
-                            </h3>
-                            <p className="text-gray-600">
-                                Upload a CSV file to begin vehicle analysis
-                            </p>
-                        </div>
-                    )}
+                    </div>
                 </div>
-            </main>
+
+                {/* Floating Chat (or Fixed Bottom Right) - Integrated nicely */}
+                {showChat && analysisResult && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="fixed bottom-6 right-6 w-96 z-50 shadow-2xl"
+                    >
+                        <ChatInterface
+                            anomalies={analysisResult.anomalies}
+                            analysisResult={analysisResult}
+                        />
+                    </motion.div>
+                )}
+            </div>
         </div>
     );
 }

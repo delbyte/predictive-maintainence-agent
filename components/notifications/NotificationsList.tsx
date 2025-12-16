@@ -1,25 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/firebase/auth';
 import { getUserNotifications } from '@/lib/agents/notification-agent';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/lib/firebase/auth';
 
 interface Notification {
     id: string;
     anomaly: {
         type: string;
-        severity: string;
+        severity: 'critical' | 'high' | 'medium' | 'low';
         description: string;
-        recommendation: string;
     };
-    vehicleInfo?: {
-        vin: string;
-        make: string;
-        model: string;
-    };
-    createdAt: number;
     read: boolean;
+    createdAt: number;
 }
 
 export default function NotificationsList() {
@@ -28,78 +22,61 @@ export default function NotificationsList() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadNotifications();
+        if (user?.email) {
+            loadNotifications(user.email);
+        }
     }, [user]);
 
-    const loadNotifications = async () => {
-        if (!user?.email) return;
-
-        setLoading(true);
-        const result = await getUserNotifications(user.email);
-        if (result.success) {
-            setNotifications(result.notifications as Notification[]);
+    const loadNotifications = async (email: string) => {
+        const result = await getUserNotifications(email);
+        if (result.success && result.notifications) {
+            // Client-side sort
+            const sorted = (result.notifications as Notification[]).sort((a, b) => b.createdAt - a.createdAt);
+            setNotifications(sorted);
         }
         setLoading(false);
     };
 
-    const severityColors: Record<string, string> = {
-        critical: 'bg-red-100 border-red-500 text-red-900',
-        high: 'bg-orange-100 border-orange-500 text-orange-900',
-        medium: 'bg-yellow-100 border-yellow-500 text-yellow-900',
-        low: 'bg-blue-100 border-blue-500 text-blue-900',
-    };
-
-    if (loading) {
-        return <div className="text-center py-4 text-gray-500">Loading notifications...</div>;
-    }
+    if (loading) return <div className="animate-pulse h-20 bg-white/5 rounded-lg" />;
 
     if (notifications.length === 0) {
         return (
-            <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <p className="text-gray-600">No new notifications</p>
+            <div className="flex flex-col items-center justify-center h-full min-h-[100px] text-foreground-muted opacity-60">
+                <span className="text-2xl mb-2">🔕</span>
+                <p className="text-xs">No active alerts</p>
             </div>
         );
     }
 
     return (
-        <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Recent Notifications</h3>
+        <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
             <AnimatePresence>
-                {notifications.map((notification) => (
+                {notifications.map((notif, index) => (
                     <motion.div
-                        key={notification.id}
-                        initial={{ opacity: 0, x: -20 }}
+                        key={notif.id}
+                        initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className={`border-l-4 rounded-lg p-4 ${severityColors[notification.anomaly.severity] || 'bg-gray-100'}`}
+                        transition={{ delay: index * 0.05 }}
+                        className="relative pl-4 py-2 border-l border-border hover:border-primary/50 transition-colors group cursor-default"
                     >
-                        <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-1">
-                                    <span className="font-semibold">{notification.anomaly.type}</span>
-                                    <span className="text-xs uppercase px-2 py-0.5 bg-white rounded-full">
-                                        {notification.anomaly.severity}
-                                    </span>
-                                </div>
+                        {/* Timeline Dot */}
+                        <div className={`absolute left-[-5px] top-3 w-2.5 h-2.5 rounded-full border-2 border-background 
+                            ${notif.anomaly.severity === 'critical' ? 'bg-error' :
+                                notif.anomaly.severity === 'high' ? 'bg-warning' :
+                                    'bg-primary'}
+                        `} />
 
-                                {notification.vehicleInfo && (
-                                    <p className="text-xs opacity-75 mb-2">
-                                        {notification.vehicleInfo.make} {notification.vehicleInfo.model} - VIN: {notification.vehicleInfo.vin}
-                                    </p>
-                                )}
-
-                                <p className="text-sm mb-2">{notification.anomaly.description}</p>
-
-                                <div className="bg-white bg-opacity-50 rounded p-2">
-                                    <p className="text-xs font-medium mb-0.5">Recommendation:</p>
-                                    <p className="text-sm">{notification.anomaly.recommendation}</p>
-                                </div>
-                            </div>
-
-                            <span className="text-xs text-gray-600 ml-4">
-                                {new Date(notification.createdAt).toLocaleDateString()}
+                        <div className="flex justify-between items-start">
+                            <h4 className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                                {notif.anomaly.type}
+                            </h4>
+                            <span className="text-[9px] text-foreground-muted uppercase tracking-wider">
+                                {new Date(notif.createdAt).toLocaleDateString()}
                             </span>
                         </div>
+                        <p className="text-[11px] text-foreground-muted mt-1 leading-snug line-clamp-2">
+                            {notif.anomaly.description}
+                        </p>
                     </motion.div>
                 ))}
             </AnimatePresence>

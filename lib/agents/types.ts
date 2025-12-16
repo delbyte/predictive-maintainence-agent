@@ -59,6 +59,13 @@ export interface Anomaly {
   affectedComponent?: string;
 }
 
+export interface AnomalyDetectionResult {
+  success: boolean;
+  anomalies: Anomaly[];
+  summary?: string;
+  error?: string;
+}
+
 export interface SchedulingStatus {
   status: 'pending' | 'scheduled' | 'completed' | 'cancelled';
   proposedDate?: string;

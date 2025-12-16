@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface CSVUploaderProps {
     onUpload: (file: File) => void;
@@ -40,10 +40,8 @@ export default function CSVUploader({ onUpload, loading }: CSVUploaderProps) {
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         e.preventDefault();
-        console.log('File input changed:', e.target.files);
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            console.log('File selected:', file.name, file.size);
             setSelectedFile(file);
             onUpload(file);
         }
@@ -56,72 +54,81 @@ export default function CSVUploader({ onUpload, loading }: CSVUploaderProps) {
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
+                animate={{
+                    borderColor: dragActive ? 'var(--primary)' : 'var(--border)',
+                    backgroundColor: dragActive ? 'rgba(94, 106, 210, 0.05)' : 'rgba(255, 255, 255, 0.01)',
+                }}
                 className={`
-          relative border-2 border-dashed rounded-lg p-12 text-center
-          transition-colors cursor-pointer
-          ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:border-gray-400'}
-          ${loading ? 'opacity-50 pointer-events-none' : ''}
-        `}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                    relative w-full h-32 rounded-xl border border-dashed transition-all duration-300
+                    flex flex-col items-center justify-center cursor-pointer group hover:border-border-highlight
+                `}
             >
                 <input
                     type="file"
-                    accept=".csv"
-                    onChange={handleChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    onChange={handleChange}
+                    accept=".csv"
                     disabled={loading}
                 />
 
-                <div className="space-y-4">
-                    <div className="flex justify-center">
-                        <svg
-                            className="w-16 h-16 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                <AnimatePresence mode="wait">
+                    {loading ? (
+                        <motion.div
+                            key="loading"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col items-center"
                         >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                            />
-                        </svg>
-                    </div>
-
-                    {selectedFile ? (
-                        <div>
-                            <p className="text-lg font-medium text-gray-900">
-                                {selectedFile.name}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {(selectedFile.size / 1024).toFixed(2)} KB
-                            </p>
-                        </div>
+                            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                            <p className="text-xs text-foreground-muted">Processing Data...</p>
+                        </motion.div>
+                    ) : selectedFile ? (
+                        <motion.div
+                            key="file"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center space-x-3 bg-surface-highlight px-4 py-2 rounded-lg border border-border"
+                        >
+                            <span className="text-xl">📄</span>
+                            <div className="text-left">
+                                <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                                <p className="text-[10px] text-foreground-muted">{(selectedFile.size / 1024).toFixed(1)} KB</p>
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setSelectedFile(null);
+                                }}
+                                className="p-1 hover:bg-white/10 rounded-full"
+                            >
+                                ✕
+                            </button>
+                        </motion.div>
                     ) : (
-                        <div>
-                            <p className="text-lg font-medium text-gray-900">
-                                Drop your CSV file here
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                or click to browse
-                            </p>
-                        </div>
+                        <motion.div
+                            key="idle"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col items-center text-center"
+                        >
+                            <div className="w-10 h-10 mb-3 rounded-full bg-surface-highlight flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-300">
+                                <span className="text-lg opacity-60">📥</span>
+                            </div>
+                            <p className="text-sm font-medium text-foreground mb-1">Upload Vehicle Data</p>
+                            <p className="text-xs text-foreground-muted">Drag & drop CSV or click to browse</p>
+                        </motion.div>
                     )}
+                </AnimatePresence>
 
-                    {loading && (
-                        <div className="flex items-center justify-center space-x-2">
-                            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-sm text-gray-600">Analyzing...</span>
-                        </div>
-                    )}
-                </div>
+                {/* Corner Accents */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-primary/30 rounded-tl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-primary/30 rounded-tr opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-primary/30 rounded-bl opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-primary/30 rounded-br opacity-0 group-hover:opacity-100 transition-opacity" />
             </motion.div>
-
-            <p className="text-xs text-gray-500 mt-2 text-center">
-                Upload a CSV file containing vehicle sensor data for analysis
-            </p>
         </div>
     );
 }

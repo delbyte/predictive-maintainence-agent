@@ -1,26 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
 import { useAuth } from '@/lib/firebase/auth';
-import { motion } from 'framer-motion';
+import { db } from '@/lib/firebase/config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Appointment {
     id: string;
-    appointmentDate: string;
-    duration: number;
-    status: string;
-    vehicleInfo?: {
-        vin: string;
-        make: string;
-        model: string;
-    };
-    anomalies: {
-        type: string;
-        severity: string;
-    }[];
-    createdAt: number;
+    date: string;
+    description: string;
+    status: 'scheduled' | 'completed' | 'cancelled';
+    technician?: string;
 }
 
 export default function AppointmentsList() {
@@ -29,117 +20,59 @@ export default function AppointmentsList() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadAppointments();
+        if (user?.email) {
+            loadAppointments(user.email);
+        }
     }, [user]);
 
-    const loadAppointments = async () => {
-        if (!user?.email) return;
-
-        setLoading(true);
+    const loadAppointments = async (email: string) => {
         try {
             const q = query(
                 collection(db, 'appointments'),
-                where('userId', '==', user.email)
+                where('userId', '==', email)
             );
 
-            const querySnapshot = await getDocs(q);
-            const apps = querySnapshot.docs.map(doc => ({
+            const snapshot = await getDocs(q);
+            const data = snapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data(),
+                ...doc.data()
             })) as Appointment[];
 
-            // Sort on client side instead
-            apps.sort((a, b) => new Date(b.appointmentDate).getTime() - new Date(a.appointmentDate).getTime());
-
-            setAppointments(apps);
+            // Client side sort
+            setAppointments(data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
         } catch (error) {
-            console.error('Error loading appointments:', error);
+            console.error('Failed to load appointments', error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    if (loading) {
-        return <div className="text-center py-4 text-gray-500">Loading appointments...</div>;
-    }
+    if (loading) return <div className="animate-pulse h-10 bg-white/5 rounded w-full" />;
 
-    if (appointments.length === 0) {
-        return (
-            <div className="bg-gray-50 rounded-lg p-6 text-center">
-                <div className="text-4xl mb-2">📅</div>
-                <p className="text-gray-600">No appointments scheduled</p>
-            </div>
-        );
-    }
+    if (appointments.length === 0) return null; // Don't show if empty to save space
 
     return (
-        <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">Scheduled Appointments</h3>
-            {appointments.map((appointment, index) => {
-                const appointmentDate = new Date(appointment.appointmentDate);
-                const isPast = appointmentDate < new Date();
-
-                return (
-                    <motion.div
-                        key={appointment.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`bg-white border-2 rounded-lg p-4 ${isPast ? 'border-gray-300 opacity-60' : 'border-blue-500'}`}
-                    >
-                        <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    <span className="text-2xl">🔧</span>
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900">Maintenance Appointment</h4>
-                                        <p className="text-sm text-gray-600">
-                                            {appointmentDate.toLocaleString('en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit',
-                                            })}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {appointment.vehicleInfo && (
-                                    <p className="text-sm text-gray-700 mb-2">
-                                        <strong>Vehicle:</strong> {appointment.vehicleInfo.make} {appointment.vehicleInfo.model} ({appointment.vehicleInfo.vin})
-                                    </p>
-                                )}
-
-                                <div className="bg-gray-50 rounded p-3">
-                                    <p className="text-xs font-medium text-gray-700 mb-1">Issues to Address:</p>
-                                    <ul className="space-y-1">
-                                        {appointment.anomalies.map((anomaly, i) => (
-                                            <li key={i} className="text-sm text-gray-900 flex items-center space-x-2">
-                                                <span className={`w-2 h-2 rounded-full ${anomaly.severity === 'critical' ? 'bg-red-500' :
-                                                    anomaly.severity === 'high' ? 'bg-orange-500' :
-                                                        anomaly.severity === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
-                                                    }`} />
-                                                <span>{anomaly.type}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Duration: {appointment.duration} minutes • Status: {appointment.status}
-                                </p>
+        <div className="glass-panel p-6 rounded-xl mt-6">
+            <h3 className="text-sm font-medium text-foreground mb-4 uppercase tracking-wider opacity-70">Scheduled Maintenance</h3>
+            <div className="space-y-2">
+                {appointments.map((appt) => (
+                    <div key={appt.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/5 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded bg-white/5 flex flex-col items-center justify-center text-xs">
+                                <span className="font-bold">{new Date(appt.date).getDate()}</span>
+                                <span className="opacity-50 uppercase text-[8px]">{new Date(appt.date).toLocaleString('default', { month: 'short' })}</span>
                             </div>
-
-                            {!isPast && (
-                                <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                    Upcoming
-                                </span>
-                            )}
+                            <div>
+                                <div className="text-sm font-medium text-foreground">{appt.description}</div>
+                                <div className="text-[10px] text-foreground-muted">{new Date(appt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {appt.technician || 'Auto-Assigned'}</div>
+                            </div>
                         </div>
-                    </motion.div>
-                );
-            })}
+                        <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-success/10 text-success border border-success/20">
+                            {appt.status}
+                        </span>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
