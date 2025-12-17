@@ -38,6 +38,8 @@ export class MasterAgent {
      * Execute the complete analysis workflow
      */
     async executeWorkflow(file: File, userEmail?: string): Promise<AgentState> {
+        console.log('[MasterAgent] Starting workflow for file:', file.name);
+
         this.emitEvent({
             type: 'agent_started',
             agentType: 'master',
@@ -54,6 +56,7 @@ export class MasterAgent {
 
         try {
             // Step 1: CSV Analysis
+            console.log('[MasterAgent] Step 1: Starting CSV Analysis...');
             this.emitEvent({
                 type: 'agent_started',
                 agentType: 'csv_analysis',
@@ -61,9 +64,11 @@ export class MasterAgent {
             });
 
             const csvResult = await analyzeCSV(file);
+            console.log('[MasterAgent] CSV Analysis result:', csvResult.success ? 'SUCCESS' : 'FAILED');
 
             if (!csvResult.success || !csvResult.data) {
                 state.error = csvResult.error || 'CSV analysis failed';
+                console.log('[MasterAgent] CSV Analysis failed:', state.error);
                 this.emitEvent({
                     type: 'agent_failed',
                     agentType: 'csv_analysis',
@@ -73,6 +78,7 @@ export class MasterAgent {
             }
 
             state.csvData = csvResult.data;
+            console.log('[MasterAgent] CSV parsed with', csvResult.data.rows.length, 'rows');
 
             this.emitEvent({
                 type: 'agent_completed',
@@ -82,16 +88,20 @@ export class MasterAgent {
             });
 
             // Step 2: Anomaly Detection
+            console.log('[MasterAgent] Step 2: Starting Anomaly Detection...');
             this.emitEvent({
                 type: 'agent_started',
                 agentType: 'anomaly_detection',
                 message: 'Detecting anomalies in vehicle data...',
             });
 
+            console.log('[MasterAgent] Calling detectAnomalies()...');
             const anomalyResult = await detectAnomalies(csvResult.data, (event) => {
                 // Forward streaming events
                 this.emitEvent(event);
             });
+            console.log('[MasterAgent] Anomaly Detection completed with', anomalyResult.anomalies.length, 'anomalies');
+
             state.anomalies = anomalyResult.anomalies;
 
             this.emitEvent({
