@@ -22,7 +22,9 @@
     "papaparse": "^5.5.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-speech-recognition": "^4.0.1",
     "recharts": "^2.12.7",
+    "regenerator-runtime": "^0.14.1",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0"
   },
