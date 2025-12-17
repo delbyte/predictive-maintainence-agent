@@ -6,7 +6,7 @@ import CSVUploader from '@/components/upload/CSVUploader';
 import AgentVisualization from '@/components/agents/AgentVisualization';
 import AnomalyDisplay from '@/components/results/AnomalyDisplay';
 import ChatInterface from '@/components/chat/ChatInterface';
-import { Loader2 } from 'lucide-react';
+import { Loader2, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -126,9 +126,13 @@ export default function AnalysisPage() {
                     </>
                 ) : (
                     <div className="h-full border border-dashed border-border flex items-center justify-center text-foreground-muted bg-surface/50">
-                        <div className="text-center">
-                            <Loader2 className={cn("w-8 h-8 mx-auto mb-4 text-border", analyzing && "animate-spin text-primary")} />
-                            <p className="text-sm font-mono">{analyzing ? "PROCESSING STREAM..." : "WAITING FOR DATA"}</p>
+                        <div className="text-center flex flex-col items-center">
+                            <div className={cn("relative w-16 h-16 flex items-center justify-center mb-6 rounded-full bg-surface border border-border", analyzing && "border-primary/50 shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)]")}>
+                                <BrainCircuit className={cn("w-8 h-8 text-foreground-muted", analyzing ? "animate-pulse text-primary" : "")} />
+                                {analyzing && <div className="absolute inset-0 rounded-full border border-primary/20 animate-ping" />}
+                            </div>
+                            <h3 className="text-sm font-bold text-foreground mb-1 uppercase tracking-widest">{analyzing ? "Neural Processing" : "System Ready"}</h3>
+                            <p className="text-xs font-mono text-foreground-muted">{analyzing ? "Ingesting telemetry stream..." : "Waiting for data stream input"}</p>
                         </div>
                     </div>
                 )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Zap, Database, Server, Loader2 } from 'lucide-react';
+import { Activity, Zap, Database, Server, Loader2, BrainCircuit } from 'lucide-react';
 import NotificationsList from '@/components/notifications/NotificationsList';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -29,8 +29,8 @@ export default function DashboardOverview() {
                 <div className="col-span-8 flex flex-col gap-6">
                     {/* Quick Action / Hero */}
                     <Link href="/dashboard/analysis" className="flex-1 bg-surface border border-border p-8 flex flex-col justify-center items-center cursor-pointer group hover:bg-surface-hover transition-colors border-dashed hover:border-solid hover:border-primary/50">
-                        <div className="w-16 h-16 bg-background border border-border flex items-center justify-center mb-6 group-hover:scale-105 transition-transform group-hover:border-primary/50">
-                            <Loader2 className="w-8 h-8 text-foreground-muted group-hover:text-primary transition-colors" />
+                        <div className="w-16 h-16 bg-background border border-border flex items-center justify-center mb-6 group-hover:scale-105 transition-transform group-hover:border-primary/50 rounded-full shadow-sm">
+                            <BrainCircuit className="w-8 h-8 text-foreground-muted group-hover:text-primary transition-colors" />
                         </div>
                         <h3 className="text-lg font-bold text-foreground mb-2">New Analysis Session</h3>
                         <p className="text-sm text-foreground-muted max-w-sm text-center">Initialize a new predictive maintenance workflow by ingesting vehicle telemetry data.</p>
