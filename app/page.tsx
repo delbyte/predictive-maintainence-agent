@@ -17,11 +17,6 @@ export default function Home() {
             </div>
             <span className="font-bold tracking-wider text-sm">AUTOMOBILE<span className="text-indigo-500">.AI</span></span>
           </div>
-          <div className="flex gap-6 text-sm text-zinc-400">
-            <a href="#" className="hover:text-white transition-colors">Platform</a>
-            <a href="#" className="hover:text-white transition-colors">Solutions</a>
-            <a href="#" className="hover:text-white transition-colors">Enterprise</a>
-          </div>
         </div>
       </nav>
 

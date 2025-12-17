@@ -49,137 +49,168 @@ export default function DocsPage() {
                 </aside>
 
                 {/* Main Content */}
-                <main className="space-y-16">
+                <main className="space-y-24">
 
                     {/* Header */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 pt-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-mono uppercase tracking-widest">
                             <span className="w-2 h-2 bg-indigo-500 rounded-none animate-pulse" />
-                            Documentation V1.0
+                            Automotive AI 2.0
                         </div>
-                        <h1 className="text-5xl font-bold tracking-tight">System Documentation</h1>
-                        <p className="text-xl text-zinc-400 max-w-2xl">
-                            Comprehensive guide to the Automobile AI's neural architecture and operational capabilities.
+                        <h1 className="text-5xl lg:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/50">
+                            Predictive Fleet<br />Neural System
+                        </h1>
+                        <p className="text-xl text-zinc-400 max-w-2xl leading-relaxed">
+                            A B2C agentic ecosystem for <span className="text-white">Indian Automotive OEMs</span>.
+                            Integrating Raspberry Pi edge computing with voice-first AI agents to transform maintenance from reactive to predictive.
                         </p>
                     </div>
 
-                    {/* Article 1: Intro */}
-                    <section id="intro" className="space-y-6">
-                        <div className="flex items-center gap-3 text-indigo-400">
+                    {/* Article 1: Context & Problem */}
+                    <section id="intro" className="space-y-8">
+                        <div className="flex items-center gap-3 text-indigo-400 border-b border-white/10 pb-4">
                             <Activity className="w-6 h-6" />
-                            <h2 className="text-2xl font-bold text-white">Introduction</h2>
+                            <h2 className="text-2xl font-bold text-white tracking-wider uppercase">01. The Reactive Paradox</h2>
                         </div>
-                        <div className="prose prose-invert max-w-none text-zinc-300">
-                            <p>
-                                The <strong>Automobile AI</strong> represents a paradigm shift in industrial fleet management.
-                                Unlike traditional heuristic-based monitoring systems, our platform utilizes a mesh of specialized AI agents
-                                to continuously analyze telemetry data in real-time.
+                        <div className="prose prose-invert max-w-none text-zinc-300 space-y-6">
+                            <p className="text-lg leading-loose">
+                                <strong>The Challenge:</strong> Major Indian automotive OEMs currently operate on a purely reactive maintenance model. Vehicles are serviced only <em>after</em> catastrophic failure occurs.
+                                This creates a chain reaction: unplanned breakdowns, erosion of customer trust, overloaded service centers, and—most critically—a complete absence of feedback loops between field failures and manufacturing engineering.
                             </p>
-                            <div className="my-8 p-6 bg-[#0c0c0e] border border-white/10 rounded-none relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <h3 className="text-lg font-bold text-white mb-2 relative z-10">The Agentic Advantage</h3>
-                                <p className="text-sm text-zinc-400 relative z-10">
-                                    By delegating monitoring tasks to autonomous agents, the system achieves a reaction time of under 50ms
-                                    for critical anomalies, reducing downtime by an average of 45% in deployed environments.
-                                </p>
+                            <p className="text-lg leading-loose">
+                                <strong>Our Solution:</strong> We deploy an Agentic AI ecosystem that places intelligence at the edge. By integrating <strong>Raspberry Pi</strong> units with OBD-II ports, we capture telemetry in real-time. But we don't just log data; we act on it. Autonomous agents predict failures, voice agents proactively call owners to schedule service, and post-service data is fed back to manufacturing.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+                                <div className="p-6 bg-[#0c0c0e] border border-white/10 hover:border-red-500/30 transition-colors">
+                                    <h3 className="text-white font-bold mb-2">Current State (Reactive)</h3>
+                                    <ul className="text-sm text-zinc-400 space-y-2 list-disc pl-4">
+                                        <li>Unplanned road-side breakdowns.</li>
+                                        <li>Design flaws persist in new models.</li>
+                                        <li>Service centers overwhelmed by emergencies.</li>
+                                    </ul>
+                                    <div className="mt-4 h-1 w-full bg-red-900/20 rounded-full"><div className="h-full w-full bg-red-800 rounded-full" /></div>
+                                </div>
+                                <div className="p-6 bg-[#0c0c0e] border border-white/10 hover:border-green-500/30 transition-colors">
+                                    <h3 className="text-white font-bold mb-2">Future State (Agentic)</h3>
+                                    <ul className="text-sm text-zinc-400 space-y-2 list-disc pl-4">
+                                        <li>Proactive "Pit-Stop" style maintenance.</li>
+                                        <li>Closed-loop RCA for Manufacturing.</li>
+                                        <li>Voice-first customer concierge.</li>
+                                    </ul>
+                                    <div className="mt-4 h-1 w-full bg-green-900/20 rounded-full"><div className="h-full w-2/3 bg-green-500 rounded-full" /></div>
+                                </div>
                             </div>
                         </div>
                     </section>
 
                     {/* Article 2: Architecture */}
-                    <section id="architecture" className="space-y-6 pt-10 border-t border-white/10">
-                        <div className="flex items-center gap-3 text-purple-400">
+                    <section id="architecture" className="space-y-8 pt-10 border-t border-white/10">
+                        <div className="flex items-center gap-3 text-purple-400 border-b border-white/10 pb-4">
                             <Cpu className="w-6 h-6" />
-                            <h2 className="text-2xl font-bold text-white">Neural Architecture</h2>
+                            <h2 className="text-2xl font-bold text-white tracking-wider uppercase">02. Edge-to-Action Topology</h2>
                         </div>
-                        <p className="text-zinc-300 leading-relaxed">
-                            At the core lies the <strong>Gemini-Powered Inference Engine</strong>. This multi-modal model processes
-                            unstructured sensor logs, vibration patterns, and thermal imaging data simultaneously.
+                        <p className="text-zinc-300 leading-relaxed text-lg">
+                            The architecture is built for speed and autonomy. It begins at the physical layer with <strong>Raspberry Pi Edge Units</strong> collecting raw OBD-II data (Coolant Temp, RPM, Fuel Trim).
+                            Deviations are transmitted via MQTT to the cloud, where the <strong>Master Agent</strong> orchestrates a legion of specialized sub-agents.
                         </p>
 
                         {/* Visual: Architecture Diagram */}
-                        <div className="my-8">
+                        <div className="my-12">
                             <ArchitectureDiagram />
-                            <p className="text-xs text-zinc-500 text-center font-mono mt-2">FIG-01: SYSTEM TOPOLOGY</p>
+                            <p className="text-xs text-zinc-500 text-center font-mono mt-4">FIG-01: RASPBERRY PI & AGENTIC MESH ARCHITECTURE</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            <div className="p-6 border border-white/10 bg-white/5 hover:border-indigo-500/50 transition-colors">
-                                <Zap className="w-5 h-5 text-indigo-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Fast Path</h4>
-                                <p className="text-sm text-zinc-400">
-                                    Heuristic-based immediate triggers for known failure signatures (e.g., thermal runaway).
+                            <div className="p-8 border border-white/10 bg-white/5 hover:border-indigo-500/50 transition-colors group">
+                                <Zap className="w-8 h-8 text-indigo-400 mb-6 group-hover:text-white transition-colors" />
+                                <h4 className="font-bold text-xl text-white mb-3">Edge Detection (Pi)</h4>
+                                <p className="text-sm text-zinc-400 leading-relaxed">
+                                    Low-latency processing on the Raspberry Pi filters noise. Only significant anomalies (e.g., "Coolant &gt; 105°C sustained") trigger the upstream agents.
                                 </p>
                             </div>
-                            <div className="p-6 border border-white/10 bg-white/5 hover:border-purple-500/50 transition-colors">
-                                <BrainCircuit className="w-5 h-5 text-purple-400 mb-4" />
-                                <h4 className="font-bold text-white mb-2">Deep Path</h4>
-                                <p className="text-sm text-zinc-400">
-                                    Complex pattern recognition for emerging anomalies over extended time windows (e.g., bearing wear).
+                            <div className="p-8 border border-white/10 bg-white/5 hover:border-purple-500/50 transition-colors group">
+                                <BrainCircuit className="w-8 h-8 text-purple-400 mb-6 group-hover:text-white transition-colors" />
+                                <h4 className="font-bold text-xl text-white mb-3">Voice Agent (Action)</h4>
+                                <p className="text-sm text-zinc-400 leading-relaxed">
+                                    Instead of a generic push notification, a conversational Voice Agent calls the customer: <em>"Hello, I detected a potential cooling issue. Can I schedule a check-up for Tuesday?"</em>
                                 </p>
                             </div>
                         </div>
                     </section>
 
-                    {/* Article 3: Anomaly Detection */}
-                    <section id="anomaly-detection" className="space-y-6 pt-10 border-t border-white/10">
-                        <div className="flex items-center gap-3 text-cyan-400">
+
+                    {/* Article 3: Operational Flow */}
+                    <section id="anomaly-detection" className="space-y-8 pt-10 border-t border-white/10">
+                        <div className="flex items-center gap-3 text-cyan-400 border-b border-white/10 pb-4">
                             <Shield className="w-6 h-6" />
-                            <h2 className="text-2xl font-bold text-white">Anomaly Detection Protocols</h2>
+                            <h2 className="text-2xl font-bold text-white tracking-wider uppercase">03. The Lifecycle Loop</h2>
                         </div>
 
                         {/* Visual: Flow Chart */}
-                        <div className="my-8">
+                        <div className="my-12">
                             <ProcessFlowChart />
-                            <p className="text-xs text-zinc-500 text-center font-mono mt-2">FIG-02: DETECTION PIPELINE</p>
+                            <p className="text-xs text-zinc-500 text-center font-mono mt-4">FIG-02: DETECTION -&gt; VOICE CALL -&gt; FEEDBACK FLOW</p>
                         </div>
 
-                        <p className="text-zinc-300 leading-relaxed">
-                            Our detection algorithms utilize an ensemble approach, combining Isolation Forests with LSTM autoencoders
-                            to detect outliers in time-series data.
+                        <p className="text-zinc-300 leading-relaxed text-lg">
+                            The true value lies in the <strong>Manufacturing Feedback Loop</strong>. Post-service data—what was actually broken versus what was predicted—is fed into the Manufacturing Insights Engine. This generates Root Cause Analysis (RCA) reports, allowing engineering teams to fix design flaws at the source, rather than just patching them in the field.
                         </p>
 
                         {/* Visual: Data Charts */}
-                        <div className="my-8">
-                            <div className="mb-4">
-                                <h3 className="text-lg font-bold text-white">Real-time Visualization</h3>
-                                <p className="text-sm text-zinc-400">Live data metrics processed by the dashboard.</p>
+                        <div className="my-12">
+                            <div className="mb-6 border-l-2 border-indigo-500 pl-4">
+                                <h3 className="text-lg font-bold text-white">Fleet-Wide Intelligence</h3>
+                                <p className="text-sm text-zinc-400">Web dashboard views for OEM Quality Assurance teams.</p>
                             </div>
                             <DataVisuals />
                         </div>
 
-                        <div className="bg-[#050505] border border-white/10 p-6 font-mono text-sm text-zinc-400">
+                        <div className="bg-[#050505] border border-white/10 p-8 font-mono text-sm text-zinc-400 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-2 opacity-50"><Shield className="w-12 h-12 text-zinc-800" /></div>
                             <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
-                                <span className="text-green-500">●</span>
-                                <span>system_log_stream.json</span>
+                                <span className="text-green-500 animate-pulse">●</span>
+                                <span>agent_action_log.json</span>
+                                <span className="text-xs text-zinc-600 ml-auto uppercase">Voice Agent Transcript</span>
                             </div>
-                            <p>
-                                <span className="text-purple-400">timestamp</span>: "2024-12-17T10:42:01Z"<br />
-                                <span className="text-purple-400">sensor_id</span>: "TURBINE-04"<br />
-                                <span className="text-purple-400">vibration_hz</span>: <span className="text-red-400">1450.2</span> <span className="text-zinc-600">// Critical Threshold Exceeded</span><br />
-                                <span className="text-purple-400">confidence</span>: 0.98
+                            <p className="space-y-1">
+                                <span className="text-purple-400">agent</span>: "Good afternoon. I'm calling from Tata Motors AI. We detected an irregular vibration pattern in your Safari's transmission."<br />
+                                <span className="text-cyan-400">customer</span>: "Is it serious? I have a trip planned."<br />
+                                <span className="text-purple-400">agent</span>: "Our diagnosis suggests early bearing fatigue (Prob: 89%). It is safe for city driving, but we recommend service before your trip. Shall I book a slot for tomorrow at 10 AM?"<br />
+                                <span className="text-zinc-500">... [Appointment Confirmed] ...</span><br />
+                                <span className="text-yellow-400">system_action</span>: "Ticket #9902 created. Feedback loop initiated for QA Team."
                             </p>
                         </div>
-                        <p className="text-zinc-300 leading-relaxed mt-4">
-                            When a threshold is breached, the relevant agent automatically instantiates a maintenance ticket
-                            and calculates the optimal intervention window to minimize operational impact.
-                        </p>
                     </section>
 
-                    {/* Article 4: Interface Design */}
-                    <section id="interface" className="space-y-6 pt-10 border-t border-white/10">
-                        <div className="flex items-center gap-3 text-pink-400">
+                    {/* Article 4: Interface & Touchpoints */}
+                    <section id="interface" className="space-y-8 pt-10 border-t border-white/10">
+                        <div className="flex items-center gap-3 text-pink-400 border-b border-white/10 pb-4">
                             <Activity className="w-6 h-6" />
-                            <h2 className="text-2xl font-bold text-white">Interface Principles</h2>
+                            <h2 className="text-2xl font-bold text-white tracking-wider uppercase">04. Solution Components</h2>
                         </div>
-                        <p className="text-zinc-300 leading-relaxed">
-                            The UI is designed for high-stress industrial environments, prioritizing high-contrast data visibility
-                            and immediate access to critical controls.
+                        <p className="text-zinc-300 leading-relaxed text-lg">
+                            The solution serves four distinct user groups: Vehicle Owners (App), Service Managers (Dashboard), OEM QA Teams (Analytics), and the Vehicles themselves (Edge Units).
                         </p>
 
                         {/* Visual: Wireframes */}
-                        <div className="my-8">
+                        <div className="my-12">
                             <WireframeGallery />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                            <div className="space-y-2">
+                                <h4 className="text-white font-bold text-sm uppercase border-b border-white/10 pb-2">Voice-First Agent</h4>
+                                <p className="text-xs text-zinc-400">Natural language conversations. Explains technical issues in simple terms and handles negotiation of service slots.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-white font-bold text-sm uppercase border-b border-white/10 pb-2">Mobile App</h4>
+                                <p className="text-xs text-zinc-400">Delivers alerts, booking management, and navigation to service centers for vehicle owners.</p>
+                            </div>
+                            <div className="space-y-2">
+                                <h4 className="text-white font-bold text-sm uppercase border-b border-white/10 pb-2">OEM Dashboard</h4>
+                                <p className="text-xs text-zinc-400">Fleet-wide health monitoring. Identification of recurring defects to trigger CAPA (Corrective Action).</p>
+                            </div>
                         </div>
                     </section>
 
