@@ -49,12 +49,12 @@ export default function Home() {
             </p>
 
             <div className="flex items-center gap-4 pt-4">
-              <button className="px-8 py-4 bg-white text-black font-bold uppercase tracking-wide hover:bg-zinc-200 transition-colors flex items-center gap-2">
+              <a href="/auth" className="px-8 py-4 bg-white text-black font-bold uppercase tracking-wide hover:bg-zinc-200 transition-colors flex items-center gap-2">
                 Start Demo <ArrowRight className="w-4 h-4" />
-              </button>
-              <button className="px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-wide hover:bg-white/5 transition-colors">
+              </a>
+              <a href="/docs" className="px-8 py-4 border border-white/20 text-white font-bold uppercase tracking-wide hover:bg-white/5 transition-colors">
                 Documentation
-              </button>
+              </a>
             </div>
 
             <div className="grid grid-cols-3 gap-8 pt-12 border-t border-white/10">
