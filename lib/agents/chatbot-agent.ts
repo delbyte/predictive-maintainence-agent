@@ -1,11 +1,23 @@
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { Anomaly, AgentMessage } from '@/lib/agents/types';
 
-const model = new ChatGoogleGenerativeAI({
-    model: 'gemini-2.5-flash',
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    temperature: 0.7,
-});
+/**
+ * Create model instance lazily to ensure API key is available at runtime
+ */
+function createModel() {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    console.log('[ChatbotAgent] Creating model, API key present:', !!apiKey);
+
+    if (!apiKey) {
+        throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not configured');
+    }
+
+    return new ChatGoogleGenerativeAI({
+        model: 'gemini-2.5-flash',
+        apiKey,
+        temperature: 0.7,
+    });
+}
 
 export interface ChatContext {
     anomalies?: Anomaly[];
@@ -15,7 +27,7 @@ export interface ChatContext {
 
 export interface ChatResponse {
     message: string;
-    intent: 'scheduling' | 'general' | 'status';
+    intent: 'scheduling' | 'schedule_request' | 'question' | 'general' | 'status';
     extractedDate?: string;
     response?: string;  // For fallback
     suggestedActions?: string[];  // For recommendations
@@ -25,7 +37,9 @@ export interface ChatResponse {
  * Chatbot Agent - Handles natural language conversations with users
  */
 export async function chat(userMessage: string, context: ChatContext): Promise<ChatResponse> {
+    console.log('[ChatbotAgent] Received message:', userMessage);
     try {
+        const model = createModel();
         // Build context for the chatbot
         const systemContext = buildSystemContext(context);
 
@@ -67,6 +81,7 @@ Respond in JSON format:
 
         const response = await model.invoke(prompt);
         const content = response.content.toString();
+        console.log('[ChatbotAgent] Raw response:', content.substring(0, 200));
 
         // Extract JSON from response (handle markdown code blocks)
         let jsonContent = content;
@@ -83,6 +98,8 @@ Respond in JSON format:
 
         try {
             const result = JSON.parse(jsonContent);
+            console.log('[ChatbotAgent] Parsed result - intent:', result.intent, 'extractedDate:', result.extractedDate);
+
             // The requested change implies a different return structure,
             // mapping to the existing ChatResponse interface as best as possible.
             return {

@@ -19,11 +19,15 @@ export async function scheduleAppointment(
   userEmail: string,
   vehicleInfo?: any
 ): Promise<SchedulingResult> {
+  console.log('[SchedulingAgent] Starting appointment scheduling');
+  console.log('[SchedulingAgent] Date:', preferredDate, 'Email:', userEmail);
   try {
     // Parse the preferred date
     const appointmentDate = new Date(preferredDate);
+    console.log('[SchedulingAgent] Parsed date:', appointmentDate);
 
     if (isNaN(appointmentDate.getTime())) {
+      console.log('[SchedulingAgent] ERROR: Invalid date format');
       return {
         success: false,
         error: 'Invalid date format',
@@ -32,6 +36,7 @@ export async function scheduleAppointment(
 
     // Check if date is in the past
     if (appointmentDate < new Date()) {
+      console.log('[SchedulingAgent] ERROR: Date is in the past');
       return {
         success: false,
         error: 'Appointment date must be in the future',
@@ -39,8 +44,10 @@ export async function scheduleAppointment(
     }
 
     const criticalAnomalies = anomalies.filter(a => a.severity === 'critical' || a.severity === 'high');
+    console.log('[SchedulingAgent] Critical anomalies:', criticalAnomalies.length);
 
     // Store appointment in Firestore
+    console.log('[SchedulingAgent] Writing to Firestore...');
     const appointmentRef = await addDoc(collection(db, 'appointments'), {
       userId: userEmail,
       appointmentDate: appointmentDate.toISOString(),
@@ -61,6 +68,7 @@ export async function scheduleAppointment(
       createdAt: Date.now(),
     });
 
+    console.log('[SchedulingAgent] SUCCESS - Appointment ID:', appointmentRef.id);
     return {
       success: true,
       appointmentDate,

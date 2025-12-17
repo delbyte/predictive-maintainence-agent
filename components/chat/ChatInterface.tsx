@@ -113,6 +113,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
             });
 
             const data = await response.json();
+            console.log('[ChatInterface] API response:', data);
             const responseText = data.response || data.message || "No response generated.";
 
             const assistantMessage: AgentMessage = {
@@ -126,7 +127,10 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
             setMessages(prev => [...prev, assistantMessage]);
             speakResponse(responseText);
 
-            if (data.intent === 'scheduling' && data.extractedDate && onScheduleRequest) {
+            // Check for scheduling intent - chatbot returns 'schedule_request' 
+            console.log('[ChatInterface] Intent:', data.intent, 'ExtractedDate:', data.extractedDate);
+            if ((data.intent === 'schedule_request' || data.intent === 'scheduling') && data.extractedDate && onScheduleRequest) {
+                console.log('[ChatInterface] Triggering onScheduleRequest with date:', data.extractedDate);
                 onScheduleRequest(data.extractedDate);
             }
         } catch (error) {

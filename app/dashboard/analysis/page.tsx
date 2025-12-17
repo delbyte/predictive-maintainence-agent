@@ -25,6 +25,14 @@ export default function AnalysisPage() {
         setEvents([]);
         setAnalysisResult(null);
 
+        // Immediately show data ingest agent as active
+        setEvents([{
+            type: 'agent_started',
+            agentType: 'csv_analysis',
+            message: `Initiating data ingestion for ${file.name}...`,
+            timestamp: Date.now()
+        }]);
+
         try {
             const formData = new FormData();
             formData.append('file', file);
@@ -99,6 +107,14 @@ export default function AnalysisPage() {
                                 analysisResult={analysisResult}
                                 vehicleInfo={analysisResult.anomalies[0] ? { vin: analysisResult.anomalies[0].vin } : undefined}
                                 onScheduleRequest={async (dateString) => {
+                                    // Light up scheduler agent
+                                    setEvents(prev => [...prev, {
+                                        type: 'agent_started',
+                                        agentType: 'scheduling',
+                                        message: `Scheduling appointment for ${new Date(dateString).toLocaleDateString()}...`,
+                                        timestamp: Date.now()
+                                    }]);
+
                                     try {
                                         const response = await fetch('/api/schedule', {
                                             method: 'POST',
@@ -112,12 +128,31 @@ export default function AnalysisPage() {
                                         });
 
                                         if (response.ok) {
+                                            // Show scheduler completed
+                                            setEvents(prev => [...prev, {
+                                                type: 'agent_completed',
+                                                agentType: 'scheduling',
+                                                message: `Appointment confirmed for ${new Date(dateString).toLocaleDateString()}`,
+                                                timestamp: Date.now()
+                                            }]);
                                             // Redirect to schedule page
                                             router.push('/dashboard/schedule');
                                         } else {
+                                            setEvents(prev => [...prev, {
+                                                type: 'agent_failed',
+                                                agentType: 'scheduling',
+                                                message: 'Failed to schedule appointment',
+                                                timestamp: Date.now()
+                                            }]);
                                             console.error("Failed to schedule");
                                         }
                                     } catch (e) {
+                                        setEvents(prev => [...prev, {
+                                            type: 'agent_failed',
+                                            agentType: 'scheduling',
+                                            message: 'Scheduling error occurred',
+                                            timestamp: Date.now()
+                                        }]);
                                         console.error(e);
                                     }
                                 }}

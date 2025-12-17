@@ -8,11 +8,15 @@ export const runtime = 'nodejs';
  * Handles appointment scheduling
  */
 export async function POST(request: NextRequest) {
+    console.log('[API/schedule] Received scheduling request');
     try {
         const body = await request.json();
         const { preferredDate, anomalies, userEmail, vehicleInfo } = body;
 
+        console.log('[API/schedule] Data:', { preferredDate, userEmail, anomalyCount: anomalies?.length });
+
         if (!preferredDate || !userEmail) {
+            console.log('[API/schedule] ERROR: Missing required fields');
             return NextResponse.json(
                 { error: 'Preferred date and email are required' },
                 { status: 400 }
@@ -20,12 +24,14 @@ export async function POST(request: NextRequest) {
         }
 
         if (!anomalies || anomalies.length === 0) {
+            console.log('[API/schedule] ERROR: No anomalies');
             return NextResponse.json(
                 { error: 'No anomalies to schedule appointment for' },
                 { status: 400 }
             );
         }
 
+        console.log('[API/schedule] Calling scheduleAppointment...');
         // Call scheduling agent
         const result = await scheduleAppointment(
             preferredDate,
@@ -33,6 +39,7 @@ export async function POST(request: NextRequest) {
             userEmail,
             vehicleInfo
         );
+        console.log('[API/schedule] Result:', result);
 
         if (!result.success) {
             return NextResponse.json(
