@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
     LayoutDashboard,
     Activity,
@@ -16,13 +18,9 @@ import { useAuth } from '@/lib/firebase/auth';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
-interface SidebarProps {
-    onNavigate: (view: string) => void;
-    currentView: string;
-}
-
-export default function Sidebar({ onNavigate, currentView }: SidebarProps) {
+export default function Sidebar() {
     const { signOut, user } = useAuth();
+    const pathname = usePathname();
     const [isSigningOut, setIsSigningOut] = useState(false);
 
     const handleSignOut = async () => {
@@ -31,12 +29,17 @@ export default function Sidebar({ onNavigate, currentView }: SidebarProps) {
     };
 
     const navItems = [
-        { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
-        { id: 'analysis', label: 'Analysis Engine', icon: BrainCircuit },
-        { id: 'anomalies', label: 'Anomaly Reports', icon: Activity },
-        { id: 'schedule', label: 'Maintenance', icon: Wrench },
-        { id: 'notifications', label: 'System Logs', icon: FileText },
+        { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+        { href: '/dashboard/analysis', label: 'Analysis Engine', icon: BrainCircuit },
+        { href: '/dashboard/anomalies', label: 'Anomaly Reports', icon: Activity },
+        { href: '/dashboard/schedule', label: 'Maintenance', icon: Wrench },
+        { href: '/dashboard/notifications', label: 'System Logs', icon: FileText },
     ];
+
+    const isActive = (href: string, exact?: boolean) => {
+        if (exact) return pathname === href;
+        return pathname.startsWith(href);
+    };
 
     return (
         <div className="w-64 h-screen bg-surface border-r border-border flex flex-col flex-shrink-0">
@@ -53,24 +56,27 @@ export default function Sidebar({ onNavigate, currentView }: SidebarProps) {
             {/* Navigation */}
             <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto">
                 <div className="text-[10px] font-bold text-foreground-dim uppercase tracking-wider mb-2 px-2">Module Access</div>
-                {navItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => onNavigate(item.id)}
-                        className={cn(
-                            "w-full flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors group rounded-sm",
-                            currentView === item.id
-                                ? "bg-surface-hover text-white border-l-2 border-primary"
-                                : "text-foreground-muted hover:text-foreground hover:bg-surface-hover border-l-2 border-transparent"
-                        )}
-                    >
-                        <div className="flex items-center gap-3">
-                            <item.icon className={cn("w-4 h-4", currentView === item.id ? "text-primary" : "text-foreground-dim group-hover:text-foreground")} />
-                            {item.label}
-                        </div>
-                        {currentView === item.id && <ChevronRight className="w-3 h-3 text-primary" />}
-                    </button>
-                ))}
+                {navItems.map((item) => {
+                    const active = isActive(item.href, item.exact);
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors group rounded-sm",
+                                active
+                                    ? "bg-surface-hover text-white border-l-2 border-primary"
+                                    : "text-foreground-muted hover:text-foreground hover:bg-surface-hover border-l-2 border-transparent"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <item.icon className={cn("w-4 h-4", active ? "text-primary" : "text-foreground-dim group-hover:text-foreground")} />
+                                {item.label}
+                            </div>
+                            {active && <ChevronRight className="w-3 h-3 text-primary" />}
+                        </Link>
+                    );
+                })}
             </nav>
 
             {/* User Footprint */}

@@ -3,8 +3,9 @@
 import { AnomalyDetectionResult } from '@/lib/agents/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { AlertTriangle, CheckCircle2, AlertOctagon, Info, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, AlertOctagon, Info, ChevronDown, ChevronUp, Activity, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Anomaly } from '@/lib/agents/types';
 
 interface AnomalyDisplayProps {
     result: AnomalyDetectionResult;
@@ -20,6 +21,16 @@ const severityConfig = {
 export default function AnomalyDisplay({ result }: AnomalyDisplayProps) {
     const { anomalies, summary } = result;
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [dispatchStatus, setDispatchStatus] = useState<Record<string, 'idle' | 'loading' | 'success'>>({});
+
+    const handleDispatch = (anomalyId: string) => {
+        setDispatchStatus(prev => ({ ...prev, [anomalyId]: 'loading' }));
+
+        // Mock API call
+        setTimeout(() => {
+            setDispatchStatus(prev => ({ ...prev, [anomalyId]: 'success' }));
+        }, 1500);
+    };
 
     if (anomalies.length === 0) {
         return (
@@ -78,6 +89,7 @@ export default function AnomalyDisplay({ result }: AnomalyDisplayProps) {
                     const config = severityConfig[anomaly.severity];
                     const Icon = config.icon;
                     const isExpanded = expandedId === anomaly.id;
+                    const status = dispatchStatus[anomaly.id] || 'idle';
 
                     return (
                         <div key={anomaly.id} className="border-b border-border last:border-0 hover:bg-surface-hover transition-colors group">
@@ -119,10 +131,39 @@ export default function AnomalyDisplay({ result }: AnomalyDisplayProps) {
                                             </div>
                                             <div>
                                                 <span className="text-foreground-dim uppercase font-bold tracking-wider mb-2 block text-[10px]">Recommended Action</span>
-                                                <p className="text-emerald-500 leading-relaxed bg-emerald-500/5 p-3 border border-emerald-500/20 font-mono text-xs">{anomaly.recommendation}</p>
-                                                <button className="mt-3 w-full py-1.5 bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase hover:bg-primary hover:text-white transition-colors">
-                                                    Initiate Dispatch
-                                                </button>
+                                                <div className="flex flex-col h-full justify-between">
+                                                    <p className="text-emerald-500 leading-relaxed bg-emerald-500/5 p-3 border border-emerald-500/20 font-mono text-xs mb-3">{anomaly.recommendation}</p>
+
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (status === 'idle') handleDispatch(anomaly.id);
+                                                        }}
+                                                        disabled={status !== 'idle'}
+                                                        className={cn(
+                                                            "w-full py-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider transition-all",
+                                                            status === 'idle' ? "bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white" :
+                                                                status === 'loading' ? "bg-surface border border-border text-foreground-muted cursor-wait" :
+                                                                    "bg-success/10 text-success border border-success/20 cursor-default"
+                                                        )}
+                                                    >
+                                                        {status === 'idle' && (
+                                                            <>
+                                                                <Send className="w-3 h-3" /> Initiate Dispatch
+                                                            </>
+                                                        )}
+                                                        {status === 'loading' && (
+                                                            <>
+                                                                <Loader2 className="w-3 h-3 animate-spin" /> Dispatching Agent...
+                                                            </>
+                                                        )}
+                                                        {status === 'success' && (
+                                                            <>
+                                                                <CheckCircle2 className="w-3 h-3" /> Dispatch Confirmed
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </motion.div>
