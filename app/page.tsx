@@ -15,7 +15,7 @@ export default function Home() {
             <div className="w-8 h-8 bg-indigo-600 flex items-center justify-center">
               <Activity className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold tracking-wider text-sm">PREDICTIVE<span className="text-indigo-500">.AI</span></span>
+            <span className="font-bold tracking-wider text-sm">AUTOMOBILE<span className="text-indigo-500">.AI</span></span>
           </div>
           <div className="flex gap-6 text-sm text-zinc-400">
             <a href="#" className="hover:text-white transition-colors">Platform</a>

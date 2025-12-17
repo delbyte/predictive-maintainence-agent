@@ -55,7 +55,7 @@ export default function DocsPage() {
                         </div>
                         <h1 className="text-5xl font-bold tracking-tight">System Documentation</h1>
                         <p className="text-xl text-zinc-400 max-w-2xl">
-                            Comprehensive guide to the Predictive Maintenance Agent's neural architecture and operational capabilities.
+                            Comprehensive guide to the Automobile AI's neural architecture and operational capabilities.
                         </p>
                     </div>
 
@@ -67,7 +67,7 @@ export default function DocsPage() {
                         </div>
                         <div className="prose prose-invert max-w-none text-zinc-300">
                             <p>
-                                The <strong>Predictive Maintenance Agent</strong> represents a paradigm shift in industrial fleet management.
+                                The <strong>Automobile AI</strong> represents a paradigm shift in industrial fleet management.
                                 Unlike traditional heuristic-based monitoring systems, our platform utilizes a mesh of specialized AI agents
                                 to continuously analyze telemetry data in real-time.
                             </p>

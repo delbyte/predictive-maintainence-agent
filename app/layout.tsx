@@ -15,7 +15,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Predictive Maintenance Agent",
+  title: "Automobile AI",
   description: "AI-powered anomaly detection and maintenance scheduling",
 };
 

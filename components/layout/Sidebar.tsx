@@ -49,7 +49,7 @@ export default function Sidebar() {
                     <div className="w-6 h-6 bg-primary flex items-center justify-center">
                         <Activity className="w-4 h-4 text-white" />
                     </div>
-                    <span className="text-sm font-bold tracking-tight text-white">PREDICTIVE.AI</span>
+                    <span className="text-sm font-bold tracking-tight text-white">AUTOMOBILE.AI</span>
                 </div>
             </div>
 
