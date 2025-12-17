@@ -62,6 +62,7 @@ export interface Anomaly {
 export interface AnomalyDetectionResult {
   success: boolean;
   anomalies: Anomaly[];
+  csvData?: CSVData;
   summary?: string;
   error?: string;
 }

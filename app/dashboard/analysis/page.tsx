@@ -136,7 +136,7 @@ export default function AnalysisPage() {
                                                 preferredDate: dateString,
                                                 anomalies: analysisResult.anomalies,
                                                 userEmail: user?.email,
-                                                vehicleInfo: { vin: 'MOCK-VIN-123456' }
+                                                vehicleInfo: analysisResult.csvData?.vehicleInfo?.[0] || { vin: 'UNKNOWN-VIN' }
                                             })
                                         });
 

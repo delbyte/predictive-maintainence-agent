@@ -54,10 +54,10 @@ export async function scheduleAppointment(
       duration: criticalAnomalies.length > 0 ? 120 : 60,
       status: 'scheduled',
       vehicleInfo: vehicleInfo ? {
-        vin: vehicleInfo.vin,
-        make: vehicleInfo.make,
-        model: vehicleInfo.model,
-        year: vehicleInfo.year,
+        vin: vehicleInfo.vin || null,
+        make: vehicleInfo.make || null,
+        model: vehicleInfo.model || null,
+        year: vehicleInfo.year || null,
       } : null,
       anomalies: anomalies.map(a => ({
         type: a.type,
