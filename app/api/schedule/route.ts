@@ -19,12 +19,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!anomalies || anomalies.length === 0) {
-            return NextResponse.json(
-                { error: 'No anomalies to schedule appointment for' },
-                { status: 400 }
-            );
-        }
+        // Allow scheduling even if no anomalies are found (prevent blocking manual requests)
+        // if (!anomalies || anomalies.length === 0) { ... }
 
         // Call scheduling agent
         const result = await scheduleAppointment(

@@ -42,11 +42,7 @@ export default function AnomalyDisplay({ result }: AnomalyDisplayProps) {
                 <p className="text-sm text-foreground-muted mt-1 max-w-sm">
                     No anomalies detected in the current dataset.
                 </p>
-                <div className="mt-6 pt-6 border-t border-border w-full max-w-md">
-                    <div className="text-xs font-mono text-foreground-muted text-left bg-surface p-3 border border-border">
-                        {summary}
-                    </div>
-                </div>
+                {/* Summary box removed as per user request to avoid empty box look */}
             </div>
         );
     }

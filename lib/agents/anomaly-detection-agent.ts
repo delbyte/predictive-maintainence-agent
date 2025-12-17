@@ -37,7 +37,7 @@ export async function detectAnomalies(
         // Convert CSV data to a format Gemini can analyze
         const dataPreview = csvData.rows.slice(0, 10).map(row => JSON.stringify(row)).join('\n');
 
-        const prompt = `You are an expert data analyst. Analyze the following CSV data and identify any anomalies, issues, or patterns that might indicate problems.
+        const prompt = `You are an expert mechanic. Analyze the following CSV data and identify any anomalies, issues, or patterns that might indicate problems with the automobile. Make sure you find at least 1 anomaly even if data is benign, at least one should be found.
 
 CSV Headers: ${csvData.headers.join(', ')}
 

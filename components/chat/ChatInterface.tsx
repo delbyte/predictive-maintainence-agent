@@ -13,9 +13,10 @@ interface ChatInterfaceProps {
     vehicleInfo?: any;
     analysisResult?: AnomalyDetectionResult;
     onScheduleRequest?: (date: string) => void;
+    onInteraction?: (agentType: 'chatbot' | 'scheduling') => void;
 }
 
-export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, onScheduleRequest }: ChatInterfaceProps) {
+export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, onScheduleRequest, onInteraction }: ChatInterfaceProps) {
     const [messages, setMessages] = useState<AgentMessage[]>([
         {
             id: '1',
@@ -55,6 +56,7 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); // Stop any current speech
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.5; // Speed up TTS
             utterance.onstart = () => setIsSpeaking(true);
             utterance.onend = () => setIsSpeaking(false);
             utterance.onerror = () => setIsSpeaking(false);
@@ -86,6 +88,11 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
 
         const content = input || transcript;
         SpeechRecognition.stopListening(); // Stop listening on send
+
+        // Trigger interaction visualization
+        if (onInteraction) {
+            onInteraction('chatbot');
+        }
 
         const userMessage: AgentMessage = {
             id: Date.now().toString(),
@@ -131,6 +138,9 @@ export default function ChatInterface({ anomalies, vehicleInfo, analysisResult, 
             console.log('[ChatInterface] Intent:', data.intent, 'ExtractedDate:', data.extractedDate);
             if ((data.intent === 'schedule_request' || data.intent === 'scheduling') && data.extractedDate && onScheduleRequest) {
                 console.log('[ChatInterface] Triggering onScheduleRequest with date:', data.extractedDate);
+                // Trigger scheduler visualization
+                if (onInteraction) onInteraction('scheduling');
+
                 onScheduleRequest(data.extractedDate);
             }
         } catch (error) {

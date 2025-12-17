@@ -111,6 +111,14 @@ export default function AnalysisPage() {
                                 anomalies={analysisResult.anomalies}
                                 analysisResult={analysisResult}
                                 vehicleInfo={analysisResult.anomalies[0] ? { vin: analysisResult.anomalies[0].vin } : undefined}
+                                onInteraction={(agentType: 'chatbot' | 'scheduling') => {
+                                    setEvents(prev => [...prev, {
+                                        type: 'agent_started', // Using 'agent_started' to trigger light-up state
+                                        agentType: agentType,
+                                        message: agentType === 'scheduling' ? 'Analyzing schedule availability...' : 'Processing user query...',
+                                        timestamp: Date.now()
+                                    }]);
+                                }}
                                 onScheduleRequest={async (dateString) => {
                                     // Light up scheduler agent
                                     setEvents(prev => [...prev, {
@@ -143,13 +151,14 @@ export default function AnalysisPage() {
                                             // Redirect to schedule page
                                             router.push('/dashboard/schedule');
                                         } else {
+                                            const errData = await response.json();
                                             setEvents(prev => [...prev, {
                                                 type: 'agent_failed',
                                                 agentType: 'scheduling',
-                                                message: 'Failed to schedule appointment',
+                                                message: `Failed to schedule: ${errData.error || 'Unknown error'}`,
                                                 timestamp: Date.now()
                                             }]);
-                                            console.error("Failed to schedule");
+                                            console.error("Failed to schedule", errData);
                                         }
                                     } catch (e) {
                                         setEvents(prev => [...prev, {
