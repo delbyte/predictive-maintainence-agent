@@ -11,8 +11,8 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import NotificationsList from '@/components/notifications/NotificationsList';
 import AppointmentsList from '@/components/appointments/AppointmentsList';
 import { AgentEvent, AnomalyDetectionResult } from '@/lib/agents/types';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Loader2, AlertTriangle, Calendar, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, AlertTriangle, Calendar, FileText, Activity, Server, Database, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
@@ -77,166 +77,200 @@ export default function Dashboard() {
         }
     };
 
-    if (authLoading) return <div className="h-screen w-screen bg-[#09090b] flex items-center justify-center text-zinc-500 font-mono text-sm tracking-widest uppercase"><Loader2 className="animate-spin w-4 h-4 mr-3 text-primary" /> System Initializing...</div>;
+    if (authLoading) return <div className="h-screen w-screen bg-background flex items-center justify-center text-foreground-muted font-mono text-sm tracking-widest uppercase"><Loader2 className="animate-spin w-4 h-4 mr-3 text-primary" /> Initializing...</div>;
     if (!user) return null;
 
     return (
-        <div className="flex bg-[#050505] min-h-screen text-zinc-200 font-sans selection:bg-[#5e6ad2] selection:text-white overflow-hidden">
+        <div className="flex bg-background min-h-screen text-foreground font-sans overflow-hidden">
             <Sidebar currentView={view} onNavigate={setView} />
 
-            <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative bg-[#050505]">
-                <div className="max-w-[1920px] mx-auto p-8 lg:p-12">
+            <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative bg-background flex flex-col">
+                {/* Functional Header */}
+                <header className="h-14 border-b border-border bg-surface flex items-center justify-between px-8 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                        <h2 className="text-sm font-bold text-foreground">
+                            {view === 'dashboard' ? 'Overview' :
+                                view === 'analysis' ? 'Analysis Console' :
+                                    view === 'anomalies' ? 'Anomaly Reports' :
+                                        view === 'schedule' ? 'Maintenance Schedule' :
+                                            view === 'notifications' ? 'System Logs' :
+                                                view.charAt(0).toUpperCase() + view.slice(1)}
+                        </h2>
+                        <span className="text-border">/</span>
+                        <p className="text-xs text-foreground-muted">
+                            {view === 'dashboard' ? 'Real-time Monitoring' :
+                                view === 'analysis' ? 'Ingest & Process' :
+                                    'Module Active'}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <StatusBadge label="ENV" value="PROD-EAST" />
+                        <StatusBadge label="LATENCY" value="24ms" active />
+                    </div>
+                </header>
 
-                    {/* Header */}
-                    <header className="mb-10 flex items-center justify-between border-b border-[#27272a] pb-6">
-                        <div>
-                            <h2 className="text-3xl font-bold text-white tracking-tight">
-                                {view === 'dashboard' ? 'Overview' :
-                                    view === 'analysis' ? 'Analysis Console' :
-                                        view === 'anomalies' ? 'Anomaly Reports' :
-                                            view === 'schedule' ? 'Maintenance Schedule' :
-                                                view === 'notifications' ? 'System Logs' :
-                                                    view.charAt(0).toUpperCase() + view.slice(1)}
-                            </h2>
-                            <p className="text-sm text-zinc-500 mt-2 font-medium">
-                                {view === 'dashboard' ? 'Real-time fleet monitoring and system status.' :
-                                    view === 'analysis' ? 'Execute predictive models and review agent logs.' :
-                                        view === 'anomalies' ? 'Detailed breakdown of detected vehicle faults.' :
-                                            view === 'schedule' ? 'Upcoming service appointments and history.' :
-                                                view === 'notifications' ? 'Historical alert log and dispatch records.' :
-                                                    'System module.'}
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="px-3 py-1 bg-[#18181b] border border-[#27272a] text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
-                                ENV: PROD-US-EAST
-                            </div>
-                            <div className="px-3 py-1 bg-[#18181b] border border-[#27272a] text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
-                                LATENCY: 24ms
-                            </div>
-                        </div>
-                    </header>
+                <div className="flex-1 p-8 overflow-y-auto">
+                    <div className="max-w-[1600px] mx-auto">
+                        <AnimatePresence mode="wait" initial={false}>
+                            {view === 'dashboard' && (
+                                <motion.div
+                                    key="dashboard"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-6"
+                                >
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <KpiCard title="System Output" value="NOMINAL" icon={Activity} trend="+1.2%" />
+                                        <KpiCard title="Active Agents" value="6" icon={Zap} trend="STABLE" />
+                                        <KpiCard title="Processed Sets" value={analysisResult?.anomalies ? "COMPLETED" : "IDLE"} icon={Database} />
+                                        <KpiCard title="Server Load" value="12%" icon={Server} trend="-0.5%" />
+                                    </div>
 
-                    {/* Content Views */}
-                    <AnimatePresence mode="wait">
-                        {view === 'dashboard' && (
-                            <motion.div
-                                key="dashboard"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="space-y-8"
-                            >
-                                {/* KPI Cards */}
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                    <KpiCard title="System Status" value="OPERATIONAL" color="text-emerald-500" />
-                                    <KpiCard title="Active Agents" value="6" color="text-white" />
-                                    <KpiCard title="Analyzed Records" value={analysisResult?.anomalies ? "COMPLETE" : "IDLE"} color="text-white" />
-                                    <KpiCard title="Pending Alerts" value="0" color="text-zinc-500" />
-                                </div>
-
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
-                                    <div className="lg:col-span-2 flex flex-col gap-8">
-                                        <div className="p-8 bg-[#09090b] border border-[#27272a] h-full flex flex-col justify-center items-center text-center group hover:border-[#3f3f46] transition-colors cursor-pointer" onClick={() => setView('analysis')}>
-                                            <div className="w-16 h-16 bg-[#18181b] border border-[#27272a] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                                <Loader2 className="w-8 h-8 text-zinc-500 group-hover:text-primary transition-colors" />
+                                    {/* Main Dashboard Layout */}
+                                    <div className="grid grid-cols-12 gap-6 h-[600px]">
+                                        <div className="col-span-8 flex flex-col gap-6">
+                                            {/* Quick Action / Hero */}
+                                            <div onClick={() => setView('analysis')} className="flex-1 bg-surface border border-border p-8 flex flex-col justify-center items-center cursor-pointer group hover:bg-surface-hover transition-colors border-dashed hover:border-solid hover:border-primary/50">
+                                                <div className="w-16 h-16 bg-background border border-border flex items-center justify-center mb-6 group-hover:scale-105 transition-transform group-hover:border-primary/50">
+                                                    <Loader2 className="w-8 h-8 text-foreground-muted group-hover:text-primary transition-colors" />
+                                                </div>
+                                                <h3 className="text-lg font-bold text-foreground mb-2">New Analysis Session</h3>
+                                                <p className="text-sm text-foreground-muted max-w-sm text-center">Initialize a new predictive maintenance workflow by ingesting vehicle telemetry data.</p>
+                                                <button className="mt-6 px-4 py-2 bg-primary text-white text-xs font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors">
+                                                    Start Ingestion
+                                                </button>
                                             </div>
-                                            <h3 className="text-xl font-bold text-white mb-2">New Analysis</h3>
-                                            <p className="text-sm text-zinc-500 max-w-md">Jump to the Analysis Console to ingest new sensor telemetry data.</p>
+                                        </div>
+
+                                        <div className="col-span-4 bg-surface border border-border flex flex-col">
+                                            <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-surface-hover">
+                                                <span className="text-xs font-bold uppercase text-foreground-dim">Recent Logs</span>
+                                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                                            </div>
+                                            <div className="flex-1 overflow-hidden p-0">
+                                                <NotificationsList />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="bg-[#09090b] border border-[#27272a] p-6 overflow-hidden flex flex-col">
-                                        <h3 className="text-sm font-bold text-white mb-6 uppercase tracking-wider flex items-center gap-2">
-                                            <FileText className="w-4 h-4 text-zinc-500" /> Recent Logs
-                                        </h3>
+                                </motion.div>
+                            )}
+
+                            {view === 'analysis' && (
+                                <motion.div
+                                    key="analysis"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="grid grid-cols-12 gap-6 h-full"
+                                >
+                                    {/* Left Panel: Upload & Pipeline */}
+                                    <div className="col-span-4 flex flex-col gap-6">
+                                        <div className="bg-surface border border-border p-6 shadow-sm">
+                                            <h3 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider">Data Source</h3>
+                                            <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
+                                        </div>
+
+                                        {/* Pipeline Monitor - Replaces old Agent Viz style */}
+                                        <div className="flex-1">
+                                            <AgentVisualization events={events} />
+                                        </div>
+                                    </div>
+
+                                    {/* Right Panel: Results & Chat */}
+                                    <div className="col-span-8 flex flex-col gap-6">
+                                        {analysisResult ? (
+                                            <>
+                                                <AnomalyDisplay result={analysisResult} />
+                                                <div className="flex-1 bg-surface border border-border flex flex-col">
+                                                    <div className="px-4 py-2 border-b border-border text-xs font-bold uppercase text-foreground-dim">
+                                                        Interactive Agent Interface
+                                                    </div>
+                                                    <ChatInterface
+                                                        anomalies={analysisResult.anomalies}
+                                                        analysisResult={analysisResult}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="h-full border border-dashed border-border flex items-center justify-center text-foreground-muted bg-surface/50">
+                                                <div className="text-center">
+                                                    <Loader2 className={cn("w-8 h-8 mx-auto mb-4 text-border", analyzing && "animate-spin text-primary")} />
+                                                    <p className="text-sm font-mono">{analyzing ? "PROCESSING STREAM..." : "WAITING FOR DATA"}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Other views handled simply for now */}
+                            {view === 'anomalies' && (
+                                <motion.div key="anomalies" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                    {analysisResult ? (
+                                        <AnomalyDisplay result={analysisResult} />
+                                    ) : (
+                                        <EmptyState icon={AlertTriangle} title="No Active Reports" desc="Run an analysis to generate anomaly reports." />
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {view === 'schedule' && (
+                                <motion.div key="schedule" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                    <div className="bg-surface border border-border p-8 min-h-[500px]">
+                                        <AppointmentsList />
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {view === 'notifications' && (
+                                <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                    <div className="bg-surface border border-border p-8 min-h-[500px]">
                                         <NotificationsList />
                                     </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {view === 'analysis' && (
-                            <motion.div
-                                key="analysis"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="space-y-8"
-                            >
-                                <div className="bg-[#09090b] border border-[#27272a] p-8">
-                                    <CSVUploader onUpload={handleFileUpload} loading={analyzing} />
-                                </div>
-
-                                <AgentVisualization events={events} />
-
-                                {analysisResult && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <div className="lg:col-span-2">
-                                            <AnomalyDisplay result={analysisResult} />
-                                        </div>
-                                        <div>
-                                            <ChatInterface
-                                                anomalies={analysisResult.anomalies}
-                                                analysisResult={analysisResult}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-
-                        {/* Full Screen Views for the "Empty" Tabs */}
-                        {view === 'anomalies' && (
-                            <motion.div key="anomalies" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                {analysisResult ? (
-                                    <AnomalyDisplay result={analysisResult} />
-                                ) : (
-                                    <EmptyState icon={AlertTriangle} title="No Active Reports" desc="Run an analysis to generate anomaly reports." />
-                                )}
-                            </motion.div>
-                        )}
-
-                        {view === 'schedule' && (
-                            <motion.div key="schedule" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <div className="bg-[#09090b] border border-[#27272a] p-8 min-h-[500px]">
-                                    <AppointmentsList />
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {view === 'notifications' && (
-                            <motion.div key="notifications" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                <div className="bg-[#09090b] border border-[#27272a] p-8 min-h-[500px]">
-                                    <NotificationsList />
-                                </div>
-                            </motion.div>
-                        )}
-
-                    </AnimatePresence>
-
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </main>
         </div>
     );
 }
 
-function KpiCard({ title, value, color }: { title: string, value: string, color: string }) {
+function StatusBadge({ label, value, active }: { label: string, value: string, active?: boolean }) {
     return (
-        <div className="p-6 bg-[#09090b] border border-[#27272a] flex flex-col justify-between h-32 hover:border-[#3f3f46] transition-colors">
-            <div className="text-xs font-mono text-zinc-500 uppercase tracking-widest">{title}</div>
-            <div className={cn("text-3xl font-bold tracking-tight", color)}>{value}</div>
+        <div className="flex items-center bg-background border border-border px-2 py-0.5 text-[10px] font-mono">
+            <span className="text-foreground-dim mr-2">{label}:</span>
+            <span className={cn("font-bold", active ? "text-success" : "text-foreground-muted")}>{value}</span>
+        </div>
+    )
+}
+
+function KpiCard({ title, value, icon: Icon, trend }: { title: string, value: string, icon: any, trend?: string }) {
+    return (
+        <div className="p-4 bg-surface border border-border flex flex-col justify-between h-28 group hover:border-primary/30 transition-colors">
+            <div className="flex justify-between items-start">
+                <span className="text-[10px] font-bold text-foreground-dim uppercase tracking-wider">{title}</span>
+                <Icon className="w-4 h-4 text-foreground-dim group-hover:text-primary transition-colors" />
+            </div>
+            <div className="flex items-end justify-between">
+                <span className="text-2xl font-bold tracking-tight text-foreground">{value}</span>
+                {trend && <span className={cn("text-[10px] font-mono", trend.startsWith('+') ? "text-success" : trend.startsWith('-') ? "text-success" : "text-foreground-muted")}>{trend}</span>}
+            </div>
         </div>
     )
 }
 
 function EmptyState({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
     return (
-        <div className="h-[400px] w-full border border-[#27272a] border-dashed bg-[#09090b] flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 bg-[#18181b] flex items-center justify-center mb-6">
-                <Icon className="w-8 h-8 text-zinc-600" />
+        <div className="h-[400px] w-full border border-border border-dashed bg-surface flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 bg-background border border-border flex items-center justify-center mb-6">
+                <Icon className="w-6 h-6 text-foreground-muted" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-300">{title}</h3>
-            <p className="text-sm text-zinc-500 mt-2 max-w-sm">{desc}</p>
+            <h3 className="text-lg font-bold text-foreground">{title}</h3>
+            <p className="text-sm text-foreground-muted mt-1 max-w-sm">{desc}</p>
         </div>
     )
 }

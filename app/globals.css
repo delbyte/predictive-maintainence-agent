@@ -1,53 +1,64 @@
 @import "tailwindcss";
 
 :root {
-  /* Linear Dark Theme Palette - Refined */
-  --background: #000000;
-  /* True Black */
-  --surface: #09090b;
-  /* Zinc 950 */
-  --surface-highlight: #18181b;
-  /* Zinc 900 */
+  /* Functional Dark Theme Palette */
+  --background: #09090b;
+  /* Zinc 950 - Deep, clean background */
+  --surface: #121215;
+  /* Slightly lighter for cards/panels */
+  --surface-hover: #1c1c20;
 
-  --foreground: #FAFAFA;
-  /* Zinc 50 */
-  --foreground-muted: #A1A1AA;
+  --foreground: #fafafa;
+  --foreground-muted: #a1a1aa;
   /* Zinc 400 */
+  --foreground-dim: #52525b;
+  /* Zinc 600 - subtle labels */
 
-  --border: #27272A;
-  /* Zinc 800 */
-  --border-highlight: #3F3F46;
-  /* Zinc 700 */
+  --border: #27272a;
+  /* Zinc 800 - Subtle definition */
+  --border-active: #3f3f46;
+  /* Zinc 700 - Hover state */
 
-  --primary: #5E6AD2;
-  --primary-glow: rgba(94, 106, 210, 0.25);
+  /* Semantic Colors - Muted for professionalism, not neon */
+  --primary: #6366f1;
+  /* Indigo 500 */
+  --primary-foreground: #ffffff;
 
-  --success: #10B981;
-  --warning: #F59E0B;
-  --error: #EF4444;
+  --success: #10b981;
+  /* Emerald 500 */
+  --warning: #f59e0b;
+  /* Amber 500 */
+  --error: #ef4444;
+  /* Red 500 */
+  --info: #3b82f6;
+  /* Blue 500 */
 
   --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --radius: 0px;
-  /* SHARP EDGES */
+  /* Kept sharp as requested/observed */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
-  --color-surface-highlight: var(--surface-highlight);
+  --color-surface-hover: var(--surface-hover);
 
   --color-foreground: var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-dim: var(--foreground-dim);
 
   --color-border: var(--border);
-  --color-border-highlight: var(--border-highlight);
+  --color-border-active: var(--border-active);
 
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
+  --color-info: var(--info);
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -65,9 +76,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar - Slim & Functional */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -80,54 +92,43 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-highlight);
+  background: var(--border-active);
 }
 
-/* Utility Animations */
-.animate-enter {
-  animation: enter 0.3s ease-out forwards;
+/* Utility Classes for "Functional" UI */
+.border-subtle {
+  border: 1px solid var(--border);
 }
 
-@keyframes enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.text-mono-sm {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  /* 12px */
+  letter-spacing: -0.025em;
 }
 
-/* 
-   FROSTED GLASS EFFECT 
-   High blur + noise texture overlay + sharp borders
-*/
-.glass-panel {
-  background: rgba(9, 9, 11, 0.4);
-  backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  position: relative;
-  overflow: hidden;
+/* Data Table Utilities */
+.table-row-hover:hover {
+  background-color: var(--surface-hover);
 }
 
-/* Add noise texture to glass panels */
-.glass-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
+/* Badge Utilities */
+.badge {
+  @apply px-2 py-0.5 text-[10px] uppercase tracking-wider font-bold border;
 }
 
-/* Ensure content stays above noise */
-.glass-panel>* {
-  position: relative;
-  z-index: 1;
+.badge-success {
+  @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20;
 }
 
-.icon-glow {
-  filter: drop-shadow(0 0 8px var(--primary-glow));
+.badge-warning {
+  @apply bg-amber-500/10 text-amber-400 border-amber-500/20;
+}
+
+.badge-error {
+  @apply bg-red-500/10 text-red-400 border-red-500/20;
+}
+
+.badge-neutral {
+  @apply bg-zinc-800/50 text-zinc-400 border-zinc-700;
 }
