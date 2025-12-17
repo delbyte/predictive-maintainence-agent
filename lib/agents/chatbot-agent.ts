@@ -43,22 +43,26 @@ export async function chat(userMessage: string, context: ChatContext): Promise<C
 
 ${systemContext}
 
+Current Date: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+ZEIT: ${new Date().toISOString()}
+
 Conversation History:
 ${conversationHistory || 'No previous conversation'}
 
 User: ${userMessage}
 
 Instructions:
-- Be friendly, clear, and concise
-    - Explain technical terms when necessary
-        - If the user wants to schedule an appointment, ask for their preferred date / time
-            - If they provide a date, acknowledge it and confirm
+- Be friendly, clear, and concise.
+- Explain technical terms when necessary.
+- CRITICAL: If the user has anomalies (especially High/Critical severity), YOU MUST STRONGLY ADVISE scheduling maintenance.
+- Proactively ASK: "Would you like to schedule a service appointment? I can book that for you now."
+- If the user agrees and provides a date, extract it in the JSON response.
 
 Respond in JSON format:
 {
     "message": "your response to the user",
-        "intent": "question|schedule_request|general",
-            "extractedDate": "ISO date string if user mentioned a specific date, otherwise null"
+    "intent": "question|schedule_request|general",
+    "extractedDate": "ISO date string if user mentioned a specific date, otherwise null"
 } `;
 
         const response = await model.invoke(prompt);
