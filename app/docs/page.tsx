@@ -15,8 +15,8 @@ export default function DocsPage() {
                         <span className="text-sm font-mono text-zinc-400">Back to Home</span>
                     </Link>
                     <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-indigo-600 flex items-center justify-center">
-                            <Book className="w-3 h-3 text-white" />
+                        <div className="w-6 h-6 flex items-center justify-center">
+                            <img src="/logo.svg" alt="Docs Logo" className="w-6 h-6" />
                         </div>
                         <span className="font-bold tracking-wider text-sm">DOCS<span className="text-indigo-500">.AI</span></span>
                     </div>

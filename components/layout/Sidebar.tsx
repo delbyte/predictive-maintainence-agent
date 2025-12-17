@@ -46,8 +46,8 @@ export default function Sidebar() {
             {/* Minimal Header */}
             <div className="h-14 flex items-center px-6 border-b border-border">
                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-primary flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 flex items-center justify-center">
+                        <img src="/logo.svg" alt="Automobile AI Logo" className="w-full h-full" />
                     </div>
                     <span className="text-sm font-bold tracking-tight text-white">AUTOMOBILE.AI</span>
                 </div>
