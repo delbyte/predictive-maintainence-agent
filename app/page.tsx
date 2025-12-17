@@ -6,7 +6,7 @@ import { Activity, ShieldCheck, Zap, BrainCircuit, ArrowRight } from 'lucide-rea
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-indigo-500 overflow-hidden font-sans">
+    <div className="min-h-screen bg-black text-white selection:bg-indigo-500 font-sans">
 
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-md">

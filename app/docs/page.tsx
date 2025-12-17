@@ -1,8 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Book, Cpu, Shield, Zap, Activity, ArrowLeft } from 'lucide-react';
+import { Book, Cpu, Shield, Zap, Activity, ArrowLeft, BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
+import ArchitectureDiagram from '@/components/docs/ArchitectureDiagram';
+import ProcessFlowChart from '@/components/docs/ProcessFlowChart';
+import WireframeGallery from '@/components/docs/WireframeGallery';
+import DataVisuals from '@/components/docs/DataVisuals';
 
 export default function DocsPage() {
     return (
@@ -92,6 +96,13 @@ export default function DocsPage() {
                             At the core lies the <strong>Gemini-Powered Inference Engine</strong>. This multi-modal model processes
                             unstructured sensor logs, vibration patterns, and thermal imaging data simultaneously.
                         </p>
+
+                        {/* Visual: Architecture Diagram */}
+                        <div className="my-8">
+                            <ArchitectureDiagram />
+                            <p className="text-xs text-zinc-500 text-center font-mono mt-2">FIG-01: SYSTEM TOPOLOGY</p>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             <div className="p-6 border border-white/10 bg-white/5 hover:border-indigo-500/50 transition-colors">
                                 <Zap className="w-5 h-5 text-indigo-400 mb-4" />
@@ -116,10 +127,27 @@ export default function DocsPage() {
                             <Shield className="w-6 h-6" />
                             <h2 className="text-2xl font-bold text-white">Anomaly Detection Protocols</h2>
                         </div>
+
+                        {/* Visual: Flow Chart */}
+                        <div className="my-8">
+                            <ProcessFlowChart />
+                            <p className="text-xs text-zinc-500 text-center font-mono mt-2">FIG-02: DETECTION PIPELINE</p>
+                        </div>
+
                         <p className="text-zinc-300 leading-relaxed">
                             Our detection algorithms utilize an ensemble approach, combining Isolation Forests with LSTM autoencoders
                             to detect outliers in time-series data.
                         </p>
+
+                        {/* Visual: Data Charts */}
+                        <div className="my-8">
+                            <div className="mb-4">
+                                <h3 className="text-lg font-bold text-white">Real-time Visualization</h3>
+                                <p className="text-sm text-zinc-400">Live data metrics processed by the dashboard.</p>
+                            </div>
+                            <DataVisuals />
+                        </div>
+
                         <div className="bg-[#050505] border border-white/10 p-6 font-mono text-sm text-zinc-400">
                             <div className="flex items-center gap-2 mb-4 border-b border-white/10 pb-2">
                                 <span className="text-green-500">●</span>
@@ -138,35 +166,25 @@ export default function DocsPage() {
                         </p>
                     </section>
 
+                    {/* Article 4: Interface Design */}
+                    <section id="interface" className="space-y-6 pt-10 border-t border-white/10">
+                        <div className="flex items-center gap-3 text-pink-400">
+                            <Activity className="w-6 h-6" />
+                            <h2 className="text-2xl font-bold text-white">Interface Principles</h2>
+                        </div>
+                        <p className="text-zinc-300 leading-relaxed">
+                            The UI is designed for high-stress industrial environments, prioritizing high-contrast data visibility
+                            and immediate access to critical controls.
+                        </p>
+
+                        {/* Visual: Wireframes */}
+                        <div className="my-8">
+                            <WireframeGallery />
+                        </div>
+                    </section>
+
                 </main>
             </div>
         </div>
     );
-}
-
-function BrainCircuit(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
-            <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
-            <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
-            <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
-            <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
-            <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
-            <path d="M6 18a4 4 0 0 1-1.97-3.284" />
-            <path d="M17.97 14.716A4 4 0 0 1 16 18" />
-        </svg>
-    )
 }

@@ -5,7 +5,7 @@ import { AnalysisProvider } from '@/lib/context/analysis-context';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({
     children,
@@ -15,6 +15,7 @@ export default function DashboardLayout({
     const { user, loading } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) router.push('/');
@@ -26,32 +27,40 @@ export default function DashboardLayout({
     return (
         <AnalysisProvider>
             <div className="flex bg-background min-h-screen text-foreground font-sans overflow-hidden">
-                <Sidebar />
-                <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative bg-background flex flex-col">
+                <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+                <main className="flex-1 h-screen overflow-y-auto custom-scrollbar relative bg-background flex flex-col w-full">
                     {/* Functional Header */}
-                    <header className="h-14 border-b border-border bg-surface flex items-center justify-between px-8 flex-shrink-0">
+                    <header className="h-14 border-b border-border bg-surface flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
                         <div className="flex items-center gap-4">
+                            {/* Mobile Toggle */}
+                            <button
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="lg:hidden p-2 -ml-2 text-foreground-muted hover:text-white"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                            </button>
+
                             <h2 className="text-sm font-bold text-foreground">
                                 {getHeaderTitle(pathname)}
                             </h2>
-                            <span className="text-border">/</span>
-                            <p className="text-xs text-foreground-muted">
+                            <span className="text-border hidden sm:inline">/</span>
+                            <p className="text-xs text-foreground-muted hidden sm:block">
                                 {getHeaderSubtitle(pathname)}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center bg-background border border-border px-2 py-0.5 text-[10px] font-mono">
-                                <span className="text-foreground-dim mr-2">ENV:</span>
+                                <span className="text-foreground-dim mr-2 hidden sm:inline">ENV:</span>
                                 <span className="font-bold text-foreground-muted">PROD-EAST</span>
                             </div>
                             <div className="flex items-center bg-background border border-border px-2 py-0.5 text-[10px] font-mono">
-                                <span className="text-foreground-dim mr-2">LATENCY:</span>
+                                <span className="text-foreground-dim mr-2 hidden sm:inline">LATENCY:</span>
                                 <span className="font-bold text-success">24ms</span>
                             </div>
                         </div>
                     </header>
 
-                    <div className="flex-1 p-8 overflow-y-auto">
+                    <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
                         <div className="max-w-[1600px] mx-auto">
                             {children}
                         </div>
