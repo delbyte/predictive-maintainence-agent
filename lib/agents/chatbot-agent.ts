@@ -49,7 +49,7 @@ export async function chat(userMessage: string, context: ChatContext): Promise<C
             .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content} `)
             .join('\n');
 
-        const prompt = `You are a helpful automotive assistant for a predictive maintenance system.Your role is to:
+        const prompt = `You are a helpful automotive assistant for a predictive maintenance system. Your role is to:
 1. Explain detected vehicle issues in simple, clear language
 2. Answer questions about the anomalies and recommendations
 3. Help users schedule maintenance appointments
