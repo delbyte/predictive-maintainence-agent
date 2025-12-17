@@ -6,7 +6,6 @@ import { Anomaly, AgentMessage } from '@/lib/agents/types';
  */
 function createModel() {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    console.log('[ChatbotAgent] Creating model, API key present:', !!apiKey);
 
     if (!apiKey) {
         throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not configured');
@@ -37,7 +36,6 @@ export interface ChatResponse {
  * Chatbot Agent - Handles natural language conversations with users
  */
 export async function chat(userMessage: string, context: ChatContext): Promise<ChatResponse> {
-    console.log('[ChatbotAgent] Received message:', userMessage);
     try {
         const model = createModel();
         // Build context for the chatbot
@@ -79,9 +77,22 @@ Respond in JSON format:
     "extractedDate": "ISO date string if user mentioned a specific date, otherwise null"
 } `;
 
-        const response = await model.invoke(prompt);
-        const content = response.content.toString();
-        console.log('[ChatbotAgent] Raw response:', content.substring(0, 200));
+        // Timeout wrapper to prevent hanging
+        const CHAT_TIMEOUT_MS = 30000;
+
+        const invokeWithTimeout = async (): Promise<string> => {
+            const response = await model.invoke(prompt);
+            return response.content.toString();
+        };
+
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Chat timeout after ${CHAT_TIMEOUT_MS / 1000} seconds`));
+            }, CHAT_TIMEOUT_MS);
+        });
+
+        const content = await Promise.race([invokeWithTimeout(), timeoutPromise]);
+
 
         // Extract JSON from response (handle markdown code blocks)
         let jsonContent = content;
@@ -98,7 +109,7 @@ Respond in JSON format:
 
         try {
             const result = JSON.parse(jsonContent);
-            console.log('[ChatbotAgent] Parsed result - intent:', result.intent, 'extractedDate:', result.extractedDate);
+
 
             // The requested change implies a different return structure,
             // mapping to the existing ChatResponse interface as best as possible.

@@ -14,17 +14,12 @@ export async function POST(request: NextRequest) {
 
     const stream = new ReadableStream({
         async start(controller) {
-            console.log('[API/analyze] Stream started');
             try {
                 const formData = await request.formData();
                 const file = formData.get('file') as File;
                 const userEmail = formData.get('userEmail') as string;
 
-                console.log('[API/analyze] Received file:', file?.name, 'size:', file?.size);
-                console.log('[API/analyze] User email:', userEmail || 'none');
-
                 if (!file) {
-                    console.log('[API/analyze] ERROR: No file provided');
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({
                         type: 'error',
                         message: 'No file provided'
@@ -33,21 +28,16 @@ export async function POST(request: NextRequest) {
                     return;
                 }
 
-                console.log('[API/analyze] Processing file:', file.name, file.size);
-
                 // Convert to proper File for Node.js
                 const buffer = await file.arrayBuffer();
                 const blob = new Blob([buffer], { type: file.type });
                 const nodeFile = new File([blob], file.name, { type: file.type });
-
-                console.log('[API/analyze] File converted, calling runMasterAgent...');
 
                 // Stream events from master agent
                 const result = await runMasterAgent(
                     nodeFile,
                     userEmail,
                     (event: AgentEvent) => {
-                        console.log('[API/analyze] Agent event:', event.type, event.agentType);
                         // Send each event as SSE
                         controller.enqueue(encoder.encode(
                             `data: ${JSON.stringify({
@@ -57,8 +47,6 @@ export async function POST(request: NextRequest) {
                         ));
                     }
                 );
-
-                console.log('[API/analyze] Master agent completed, result:', result.error || 'success');
 
                 // Send final result
                 const anomalyCount = result.anomalies?.length || 0;

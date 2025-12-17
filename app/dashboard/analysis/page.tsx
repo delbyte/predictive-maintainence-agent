@@ -57,12 +57,17 @@ export default function AnalysisPage() {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
+                            console.log('[Analysis] SSE Event:', data.type, data.event?.agentType || '');
                             if (data.type === 'agent_event') {
+                                console.log('[Analysis] Agent event:', data.event.type, data.event.message?.substring(0, 80));
                                 setEvents(p => [...p, data.event]);
                             } else if (data.type === 'complete') {
+                                console.log('[Analysis] Complete! Anomalies:', data.state.anomalies?.length);
                                 setAnalysisResult(data.state);
+                            } else if (data.type === 'error') {
+                                console.error('[Analysis] Error:', data.message);
                             }
-                        } catch (e) { console.warn(e); }
+                        } catch (e) { console.warn('[Analysis] Parse error:', e); }
                     }
                 }
             }

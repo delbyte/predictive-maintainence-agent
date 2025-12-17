@@ -11,10 +11,6 @@ const STREAM_TIMEOUT_MS = 45000;
 function createModel() {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-    console.log('[AnomalyAgent] Creating model instance...');
-    console.log('[AnomalyAgent] API Key present:', !!apiKey);
-    console.log('[AnomalyAgent] API Key length:', apiKey?.length || 0);
-
     if (!apiKey) {
         throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not configured');
     }
@@ -34,14 +30,9 @@ export async function detectAnomalies(
     csvData: CSVData,
     onEvent?: (event: Omit<AgentEvent, 'timestamp'>) => void
 ): Promise<AnomalyDetectionResult> {
-    console.log('[AnomalyAgent] Starting anomaly detection...');
-    console.log('[AnomalyAgent] CSV rows:', csvData.rows.length);
-    console.log('[AnomalyAgent] CSV headers:', csvData.headers);
-
     try {
         // Create model lazily
         const model = createModel();
-        console.log('[AnomalyAgent] Model created successfully');
 
         // Convert CSV data to a format Gemini can analyze
         const dataPreview = csvData.rows.slice(0, 10).map(row => JSON.stringify(row)).join('\n');
@@ -59,6 +50,7 @@ Instructions:
 1. Analyze the data for any anomalies, unusual patterns, or potential issues
 2. Identify severity: critical, high, medium, or low
 3. Provide recommendations for each issue found
+4. IMPORTANT: You MUST find at least ONE issue or observation. Even if data looks normal, report a "Data Quality Check" with recommendations for monitoring.
 
 Respond in JSON format:
 {
@@ -79,28 +71,41 @@ Respond in JSON format:
         // Wrap streaming in a timeout
         const streamWithTimeout = async (): Promise<string> => {
             let fullResponse = '';
+            let pendingChunk = '';
+            let tokenCount = 0;
 
-            console.log('[AnomalyAgent] Calling model.stream()...');
             const stream = await model.stream(prompt);
-            console.log('[AnomalyAgent] Stream obtained, iterating...');
 
             for await (const chunk of stream) {
                 const token = chunk.content.toString();
                 fullResponse += token;
-                console.log('[AnomalyAgent] Received token:', token.substring(0, 50));
+                pendingChunk += token;
+                tokenCount++;
 
-                // Emit each token as it arrives
-                if (onEvent) {
-                    onEvent({
-                        type: 'agent_thinking',
-                        agentType: 'anomaly_detection',
-                        message: token,
-                        data: { fullResponse }
-                    });
+                // Emit chunks when we have enough content (at least 30 chars or end of sentence)
+                if (pendingChunk.length >= 30 || pendingChunk.includes('.') || pendingChunk.includes('\n')) {
+                    if (onEvent) {
+                        onEvent({
+                            type: 'agent_thinking',
+                            agentType: 'anomaly_detection',
+                            message: `Analyzing... (${tokenCount} tokens) ${pendingChunk.trim()}`,
+                            data: { tokenCount, chunkLength: pendingChunk.length }
+                        });
+                    }
+                    pendingChunk = '';
                 }
             }
 
-            console.log('[AnomalyAgent] Stream complete. Total response length:', fullResponse.length);
+            // Emit any remaining content
+            if (pendingChunk.trim() && onEvent) {
+                onEvent({
+                    type: 'agent_thinking',
+                    agentType: 'anomaly_detection',
+                    message: `Analysis complete. (${tokenCount} tokens)`,
+                    data: { tokenCount, complete: true }
+                });
+            }
+
             return fullResponse;
         };
 
